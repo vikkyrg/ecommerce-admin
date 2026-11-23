@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Eye, EyeOff, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function AdminLogin() {
@@ -29,16 +29,16 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1114] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-[#181a1f] border border-neutral-800 rounded-2xl p-7 sm:p-9 shadow-2xl space-y-6">
+    <div className="min-h-screen bg-[#0f1114] flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-md bg-[#181a1f] border border-neutral-800 rounded-2xl sm:rounded-3xl p-6 sm:p-9 shadow-2xl space-y-6">
         
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 bg-black border border-neutral-800 rounded-xl flex items-center justify-center mx-auto shadow-md">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-black border border-neutral-800 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto shadow-md">
             <img
               src="/logo.jpeg"
               alt="NS Logo"
-              className="w-10 h-10 object-contain rounded"
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded"
               onError={e => {
                 e.target.style.display = 'none';
               }}
@@ -47,10 +47,10 @@ export default function AdminLogin() {
           <span className="inline-block px-3 py-1 bg-amber-500/10 text-[#ffdf9c] border border-amber-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
             Restricted Access
           </span>
-          <h1 className="font-['Manrope'] font-bold text-2xl text-white tracking-tight">
+          <h1 className="font-['Manrope'] font-bold text-xl sm:text-2xl text-white tracking-tight">
             NS Stone Chemicals Admin
           </h1>
-          <p className="font-['Inter'] text-xs text-neutral-400">
+          <p className="font-['Inter'] text-xs text-neutral-400 max-w-xs mx-auto leading-relaxed">
             Sign in with verified administrator credentials to manage products and categories.
           </p>
         </div>
@@ -58,7 +58,7 @@ export default function AdminLogin() {
         {error && (
           <div className="p-3 bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs rounded-xl flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{error}</span>
+            <span className="leading-snug">{error}</span>
           </div>
         )}
 
@@ -73,7 +73,7 @@ export default function AdminLogin() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@nsstonechemicals.com"
-                className="w-full bg-[#111317] text-white pl-10 pr-3 py-3 rounded-xl border border-neutral-700 focus:outline-none focus:border-[#ffdf9c] transition-colors"
+                className="w-full bg-[#111317] text-white pl-10 pr-3 py-3 rounded-xl border border-neutral-700 focus:outline-none focus:border-[#ffdf9c] transition-colors text-xs"
               />
             </div>
           </div>
@@ -88,12 +88,13 @@ export default function AdminLogin() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-[#111317] text-white pl-10 pr-10 py-3 rounded-xl border border-neutral-700 focus:outline-none focus:border-[#ffdf9c] transition-colors"
+                className="w-full bg-[#111317] text-white pl-10 pr-10 py-3 rounded-xl border border-neutral-700 focus:outline-none focus:border-[#ffdf9c] transition-colors text-xs"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(p => !p)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white cursor-pointer"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white cursor-pointer p-1"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -104,7 +105,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#ffdf9c] hover:bg-amber-400 text-black font-bold py-3.5 rounded-xl transition-all shadow-md active:scale-[0.99] cursor-pointer disabled:opacity-60"
+              className="w-full bg-[#ffdf9c] hover:bg-amber-400 text-black font-bold py-3.5 rounded-xl transition-all shadow-md active:scale-[0.99] cursor-pointer disabled:opacity-60 text-xs sm:text-sm"
             >
               {loading ? 'Authenticating...' : 'Sign In to Control Center'}
             </button>
@@ -112,8 +113,9 @@ export default function AdminLogin() {
         </form>
 
         <div className="pt-2 border-t border-neutral-800 text-center">
-          <p className="text-[11px] text-neutral-500">
-            Default credentials: <strong className="text-neutral-300">admin@nsstonechemicals.com</strong> / <strong className="text-neutral-300">admin123</strong>
+          <p className="text-[11px] text-neutral-500 leading-relaxed">
+            Default credentials: <br className="sm:hidden" />
+            <strong className="text-neutral-300">admin@nsstonechemicals.com</strong> / <strong className="text-neutral-300">admin123</strong>
           </p>
         </div>
 
