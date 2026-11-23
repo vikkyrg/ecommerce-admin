@@ -1,6 +1,6 @@
 // Central API service for Admin operations
-const BASE = import.meta.env.VITE_API_URL || '';
-export const API_BASE_URL = BASE ? `${BASE.replace(/\/+$/, '')}/api` : '/api';
+// Always uses relative API path so it works with Vite proxy (dev) and Vercel rewrites (prod)
+export const API_BASE_URL = '/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('ns_stone_admin_token');
@@ -8,6 +8,20 @@ const getAuthHeaders = () => {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
+};
+
+/* ================= AUTH ================= */
+export const loginAdminApi = async (email, password) => {
+  const res = await fetch(`${API_BASE_URL}/admin/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Invalid admin credentials');
+  }
+  return data;
 };
 
 /* ================= CATEGORIES ================= */
@@ -92,4 +106,3 @@ export const deleteAdminProduct = async id => {
   if (!res.ok) throw new Error(data.message || 'Failed to delete product');
   return data;
 };
-

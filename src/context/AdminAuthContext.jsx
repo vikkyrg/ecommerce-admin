@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { loginAdminApi } from '../services/adminApi';
 
 const AdminAuthContext = createContext();
 
@@ -24,18 +25,7 @@ export const AdminAuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const BASE = import.meta.env.VITE_API_URL || '';
-      const API_URL = BASE ? `${BASE.replace(/\/+$/, '')}/api` : '/api';
-      const res = await fetch(`${API_URL}/admin/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Invalid admin credentials');
-      }
-
+      const data = await loginAdminApi(email, password);
       setAdmin(data);
       setToken(data.token);
       localStorage.setItem('ns_stone_admin_token', data.token);
