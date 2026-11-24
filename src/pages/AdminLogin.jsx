@@ -29,71 +29,71 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1114] flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-md bg-[#181a1f] border border-neutral-800 rounded-2xl sm:rounded-3xl p-6 sm:p-9 shadow-2xl space-y-6">
+    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4 sm:p-6 text-[#1E293B]">
+      <div className="w-full max-w-[400px] bg-white border border-[#E2E8F0] rounded-lg p-6 sm:p-8 shadow-sm space-y-6">
         
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-black border border-neutral-800 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto shadow-md">
+          <div className="w-12 h-12 bg-white border border-[#E2E8F0] rounded-md flex items-center justify-center mx-auto p-1">
             <img
-              src="/logo.jpeg"
-              alt="NS Logo"
-              className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded"
-              onError={e => {
-                e.target.style.display = 'none';
-              }}
+              src="/logo.png"
+              alt="NS Stone Logo"
+              className="w-full h-full object-contain"
             />
           </div>
-          <span className="inline-block px-3 py-1 bg-amber-500/10 text-[#ffdf9c] border border-amber-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
-            Restricted Access
-          </span>
-          <h1 className="font-['Manrope'] font-bold text-xl sm:text-2xl text-white tracking-tight">
-            NS Stone Chemicals Admin
-          </h1>
-          <p className="font-['Inter'] text-xs text-neutral-400 max-w-xs mx-auto leading-relaxed">
-            Sign in with verified administrator credentials to manage products and categories.
-          </p>
+          <div className="pt-1">
+            <h1 className="text-[20px] font-[650] text-[#1E293B]">
+              NS Stone Chemicals
+            </h1>
+            <p className="text-[12px] text-[#64748B] mt-0.5">
+              Enterprise Catalog & Inventory Management
+            </p>
+          </div>
         </div>
 
         {error && (
-          <div className="p-3 bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs rounded-xl flex items-center gap-2">
+          <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[13px] rounded-md flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span className="leading-snug">{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs font-['Inter']">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-neutral-300 font-semibold mb-1.5">Admin Email</label>
+            <label className="block text-[13px] font-medium text-[#1E293B] mb-1.5">
+              Email Address
+            </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@nsstonechemicals.com"
-                className="w-full bg-[#111317] text-white pl-10 pr-3 py-3 rounded-xl border border-neutral-700 focus:outline-none focus:border-[#ffdf9c] transition-colors text-xs"
+                className="w-full h-[42px] pl-10 pr-3 bg-white text-[#1E293B] text-[14px] placeholder-[#94A3B8] border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#B8862D] focus:ring-1 focus:ring-[#B8862D]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-neutral-300 font-semibold mb-1.5">Password</label>
+            <label className="block text-[13px] font-medium text-[#1E293B] mb-1.5">
+              Password
+            </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-[#111317] text-white pl-10 pr-10 py-3 rounded-xl border border-neutral-700 focus:outline-none focus:border-[#ffdf9c] transition-colors text-xs"
+                className="w-full h-[42px] pl-10 pr-10 bg-white text-[#1E293B] text-[14px] placeholder-[#94A3B8] border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#B8862D] focus:ring-1 focus:ring-[#B8862D]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(p => !p)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white cursor-pointer p-1"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#1E293B] cursor-pointer"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -101,24 +101,14 @@ export default function AdminLogin() {
             </div>
           </div>
 
-          <div className="pt-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#ffdf9c] hover:bg-amber-400 text-black font-bold py-3.5 rounded-xl transition-all shadow-md active:scale-[0.99] cursor-pointer disabled:opacity-60 text-xs sm:text-sm"
-            >
-              {loading ? 'Authenticating...' : 'Sign In to Control Center'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-[42px] bg-[#B8862D] hover:bg-[#9c7126] text-white text-[13px] font-semibold rounded-md transition-colors duration-150 flex items-center justify-center cursor-pointer disabled:opacity-50"
+          >
+            {loading ? 'Authenticating...' : 'Sign In to Portal'}
+          </button>
         </form>
-
-        <div className="pt-2 border-t border-neutral-800 text-center">
-          <p className="text-[11px] text-neutral-500 leading-relaxed">
-            Default credentials: <br className="sm:hidden" />
-            <strong className="text-neutral-300">admin@nsstonechemicals.com</strong> / <strong className="text-neutral-300">admin123</strong>
-          </p>
-        </div>
-
       </div>
     </div>
   );

@@ -8,6 +8,8 @@ import CategoryManagement from './pages/CategoryManagement';
 import BrandManagement from './pages/BrandManagement';
 import ProductManagement from './pages/ProductManagement';
 import ExcelImport from './pages/ExcelImport';
+import CustomersManagement from './pages/CustomersManagement';
+import EnquiriesManagement from './pages/EnquiriesManagement';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAdminAuth();
@@ -44,6 +46,8 @@ export default function App() {
             <Route path="/categories" element={<CategoryManagement />} />
             <Route path="/brands" element={<BrandManagement />} />
             <Route path="/products" element={<ProductManagement />} />
+            <Route path="/customers" element={<CustomersManagement />} />
+            <Route path="/enquiries" element={<EnquiriesManagement />} />
             <Route path="/import" element={<ExcelImport />} />
           </Route>
 

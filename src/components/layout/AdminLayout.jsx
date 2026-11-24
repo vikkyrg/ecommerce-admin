@@ -6,7 +6,7 @@ export default function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f9f9f7] text-neutral-900">
+    <div className="flex h-screen overflow-hidden bg-[#F8F9FA] text-[#111827]">
       {/* Responsive Sidebar & Mobile Slide-in Drawer */}
       <Sidebar
         mobileOpen={mobileMenuOpen}

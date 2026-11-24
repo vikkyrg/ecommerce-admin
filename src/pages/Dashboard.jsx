@@ -3,11 +3,8 @@ import { Link, useOutletContext } from 'react-router-dom';
 import {
   Layers,
   Package,
-  CheckCircle2,
-  Clock,
   Plus,
   ArrowRight,
-  TrendingUp,
   Tag
 } from 'lucide-react';
 import Topbar from '../components/layout/Topbar';
@@ -18,6 +15,7 @@ export default function Dashboard() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     Promise.all([fetchAdminCategories(), fetchAdminProducts()])
@@ -25,208 +23,232 @@ export default function Dashboard() {
         setCategories(Array.isArray(cats) ? cats : []);
         setProducts(Array.isArray(prodsData?.products) ? prodsData.products : []);
       })
-      .catch(err => console.error('Dashboard load error:', err))
+      .catch(err => setError(err.message || 'Failed to load dashboard data'))
       .finally(() => setLoading(false));
   }, []);
 
-  const activeProducts = products.filter(p => p.isActive !== false && p.inStock !== false);
-  const recentProducts = products.slice(0, 6);
+  const activeProducts = products.filter(p => p.isActive !== false);
+  const recentProducts = products.slice(0, 8);
 
   return (
     <div className="flex-1 flex flex-col min-h-full">
       <Topbar
-        title="Admin Control Center"
-        subtitle="Overview of categories, inventory, and catalog status"
+        title="Dashboard Overview"
+        subtitle="Live catalog inventory statistics, stock levels, and recently modified products"
         onMenuClick={toggleMobileMenu}
       />
 
-      <main className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 flex-1 max-w-7xl w-full mx-auto">
+      <main className="p-5 sm:p-8 space-y-7 flex-1 max-w-7xl w-full mx-auto">
+        {error && (
+          <div role="alert" className="p-4 rounded-md border border-red-200 bg-red-50 text-red-700 text-[13.5px]">
+            {error}
+          </div>
+        )}
         
         {/* Quick Action Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-[#e2e3e1] shadow-2xs">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-5 rounded-lg border border-[#E2E8F0]">
           <div>
-            <h3 className="font-['Manrope'] font-bold text-base text-black">Quick Actions</h3>
-            <p className="text-xs text-neutral-500 font-['Inter']">Manage your product catalog and store categories directly.</p>
+            <h2 className="text-[18px] font-[650] text-[#1E293B] tracking-[-0.015em]">Quick Catalog Actions</h2>
+            <p className="text-[14px] text-[#64748B] mt-0.5 font-normal">Direct shortcuts to add items or create new application categories.</p>
           </div>
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-3">
             <Link
               to="/categories?action=new"
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 bg-neutral-900 hover:bg-black text-white px-3.5 sm:px-4 py-2.5 rounded-xl text-xs font-semibold font-['Inter'] transition-colors shadow-2xs"
+              className="flex-1 sm:flex-none h-[40px] px-4 bg-white hover:bg-[#F8FAFC] text-[#1E293B] text-[13.5px] font-semibold border border-[#E2E8F0] rounded-md transition-colors inline-flex items-center justify-center gap-2"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4 text-[#64748B]" />
               <span>Add Category</span>
             </Link>
 
             <Link
               to="/products?action=new"
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 bg-black hover:bg-neutral-800 text-[#ffdf9c] px-3.5 sm:px-4 py-2.5 rounded-xl text-xs font-bold font-['Inter'] transition-colors shadow-2xs"
+              className="flex-1 sm:flex-none h-[40px] px-4 bg-[#B8862D] hover:bg-[#9c7126] text-white text-[13.5px] font-semibold rounded-md transition-colors inline-flex items-center justify-center gap-2"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-4 h-4 text-white" />
               <span>Add Product</span>
             </Link>
           </div>
         </div>
 
-        {/* 4 Summary Cards: 1 col on XS, 2 col on SM/MD, 4 col on LG+ */}
+        {/* 4 Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {/* Total Categories */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#e2e3e1] shadow-2xs flex flex-col justify-between">
+          <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between text-neutral-500 mb-2">
-                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider font-['Inter']">Total Categories</span>
-                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+              <div className="flex items-center justify-between text-[#64748B] mb-2">
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-[#64748B]">Total Categories</span>
+                <div className="w-8 h-8 rounded-md bg-[#F8F3E9] text-[#B8862D] flex items-center justify-center">
                   <Layers className="w-4 h-4" />
                 </div>
               </div>
-              <p className="font-['Manrope'] font-extrabold text-2xl sm:text-3xl text-black">
+              <p className="text-[30px] font-bold text-[#1E293B] tracking-[-0.03em] leading-tight mt-1">
                 {loading ? '...' : categories.length}
               </p>
             </div>
-            <Link to="/categories" className="text-xs font-semibold text-neutral-600 hover:text-black inline-flex items-center gap-1 mt-4 pt-3 border-t border-neutral-100">
+            <Link to="/categories" className="text-[13.5px] font-semibold text-[#B8862D] hover:underline inline-flex items-center gap-1.5 mt-5 pt-3.5 border-t border-[#E2E8F0]">
               <span>Manage Categories</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           {/* Total Products */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#e2e3e1] shadow-2xs flex flex-col justify-between">
+          <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between text-neutral-500 mb-2">
-                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider font-['Inter']">Total Products</span>
-                <div className="w-9 h-9 rounded-xl bg-neutral-100 text-neutral-800 flex items-center justify-center">
+              <div className="flex items-center justify-between text-[#64748B] mb-2">
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-[#64748B]">Total Products</span>
+                <div className="w-8 h-8 rounded-md bg-slate-100 text-[#1E293B] flex items-center justify-center">
                   <Package className="w-4 h-4" />
                 </div>
               </div>
-              <p className="font-['Manrope'] font-extrabold text-2xl sm:text-3xl text-black">
+              <p className="text-[30px] font-bold text-[#1E293B] tracking-[-0.03em] leading-tight mt-1">
                 {loading ? '...' : products.length}
               </p>
             </div>
-            <Link to="/products" className="text-xs font-semibold text-neutral-600 hover:text-black inline-flex items-center gap-1 mt-4 pt-3 border-t border-neutral-100">
-              <span>View Product List</span>
+            <Link to="/products" className="text-[13.5px] font-semibold text-[#B8862D] hover:underline inline-flex items-center gap-1.5 mt-5 pt-3.5 border-t border-[#E2E8F0]">
+              <span>Manage Products</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {/* Active Products */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#e2e3e1] shadow-2xs flex flex-col justify-between">
+          {/* Active in Store */}
+          <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between text-neutral-500 mb-2">
-                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider font-['Inter']">Active In Store</span>
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                  <CheckCircle2 className="w-4 h-4" />
+              <div className="flex items-center justify-between text-[#64748B] mb-2">
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-[#64748B]">Active in Store</span>
+                <div className="w-8 h-8 rounded-md bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                 </div>
               </div>
-              <p className="font-['Manrope'] font-extrabold text-2xl sm:text-3xl text-emerald-700">
+              <p className="text-[30px] font-bold text-[#1E293B] tracking-[-0.03em] leading-tight mt-1">
                 {loading ? '...' : activeProducts.length}
               </p>
             </div>
-            <span className="text-[11px] text-neutral-500 block mt-4 pt-3 border-t border-neutral-100 truncate">
-              Visible to direct customers
-            </span>
+            <div className="text-[13px] text-[#64748B] mt-5 pt-3.5 border-t border-[#E2E8F0]">
+              Published to customer store
+            </div>
           </div>
 
-          {/* Best Sellers */}
-          <div className="bg-white p-5 sm:p-6 rounded-2xl border border-[#e2e3e1] shadow-2xs flex flex-col justify-between">
+          {/* Brand Coverage */}
+          <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between text-neutral-500 mb-2">
-                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider font-['Inter']">Best Sellers</span>
-                <div className="w-9 h-9 rounded-xl bg-[#141619] text-[#ffdf9c] flex items-center justify-center">
-                  <Clock className="w-4 h-4" />
+              <div className="flex items-center justify-between text-[#64748B] mb-2">
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-[#64748B]">Brand Coverage</span>
+                <div className="w-8 h-8 rounded-md bg-slate-100 text-[#1E293B] flex items-center justify-center">
+                  <Tag className="w-4 h-4" />
                 </div>
               </div>
-              <p className="font-['Manrope'] font-extrabold text-2xl sm:text-3xl text-black">
-                {loading ? '...' : products.filter(p => p.isBestSeller).length}
+              <p className="text-[30px] font-bold text-[#1E293B] tracking-[-0.03em] leading-tight mt-1">
+                {loading ? '...' : new Set(products.map(p => p.brand).filter(Boolean)).size}
               </p>
             </div>
-            <span className="text-[11px] text-neutral-500 block mt-4 pt-3 border-t border-neutral-100 truncate">
-              Featured on Home Page
-            </span>
+            <Link to="/brands" className="text-[13.5px] font-semibold text-[#B8862D] hover:underline inline-flex items-center gap-1.5 mt-5 pt-3.5 border-t border-[#E2E8F0]">
+              <span>Manage Brands</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
 
-        {/* Recently Added Products: Adaptive Table for Desktop, Card List for Mobile */}
-        <div className="bg-white rounded-2xl border border-[#e2e3e1] shadow-2xs overflow-hidden">
-          <div className="p-4 sm:p-5 border-b border-neutral-100 flex items-center justify-between gap-3">
+        {/* Recent Products Table */}
+        <div className="bg-white rounded-lg border border-[#E2E8F0] overflow-hidden">
+          <div className="p-5 border-b border-[#E2E8F0] flex items-center justify-between">
             <div>
-              <h3 className="font-['Manrope'] font-bold text-sm sm:text-base text-black">Recent Products</h3>
-              <p className="text-xs text-neutral-500">Live products in the NS Stone Chemicals catalog.</p>
+              <h2 className="text-[18px] font-[650] text-[#1E293B] tracking-[-0.015em]">Recently Updated Products</h2>
+              <p className="text-[14px] text-[#64748B] mt-0.5">Specifications and inventory balances of items recently modified in your catalog.</p>
             </div>
-            <Link to="/products" className="text-xs font-bold text-black hover:underline whitespace-nowrap">
-              View All →
+            <Link
+              to="/products"
+              className="text-[13.5px] font-semibold text-[#B8862D] hover:underline inline-flex items-center gap-1"
+            >
+              <span>View all products</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
-          {/* Desktop & Tablet Table (Hidden on small mobile) */}
-          <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full text-left text-xs font-['Inter']">
-              <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-500 uppercase tracking-wider text-[10px]">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-[#F8FAFC] text-[#64748B] border-b border-[#E2E8F0]">
                 <tr>
-                  <th className="p-4">Product Name</th>
-                  <th className="p-4">SKU</th>
-                  <th className="p-4">Category</th>
-                  <th className="p-4">Price</th>
-                  <th className="p-4">Stock</th>
-                  <th className="p-4">Status</th>
+                  <th className="px-5 py-3.5 text-[12.5px] font-semibold">Product Title</th>
+                  <th className="px-5 py-3.5 text-[12.5px] font-semibold">Brand</th>
+                  <th className="px-5 py-3.5 text-[12.5px] font-semibold">Price</th>
+                  <th className="px-5 py-3.5 text-[12.5px] font-semibold">Stock Balance</th>
+                  <th className="px-5 py-3.5 text-[12.5px] font-semibold">Status</th>
+                  <th className="px-5 py-3.5 text-[12.5px] font-semibold text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {recentProducts.map(p => (
-                  <tr key={p.id || p.sku || p._id} className="hover:bg-neutral-50/70">
-                    <td className="p-4 flex items-center gap-3">
-                      <img
-                        src={p.image}
-                        alt={p.name}
-                        className="w-9 h-9 object-contain rounded border border-neutral-200 p-0.5 bg-white flex-shrink-0"
-                        onError={e => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                      <span className="font-semibold text-black line-clamp-1 max-w-xs">{p.name}</span>
-                    </td>
-                    <td className="p-4 font-mono font-medium text-neutral-600 whitespace-nowrap">{p.sku}</td>
-                    <td className="p-4 text-neutral-600 line-clamp-1 max-w-[140px]">{p.category}</td>
-                    <td className="p-4 font-bold text-black whitespace-nowrap">₹{p.price?.toLocaleString('en-IN')}</td>
-                    <td className="p-4 whitespace-nowrap">{p.stock || 25} units</td>
-                    <td className="p-4 whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        Active
-                      </span>
+              <tbody className="divide-y divide-[#E2E8F0] text-[#1E293B]">
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-10 text-center text-[14px] text-[#64748B]">
+                      Loading records...
                     </td>
                   </tr>
-                ))}
+                ) : recentProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-10 text-center text-[14px] text-[#64748B]">
+                      No products recorded yet.
+                    </td>
+                  </tr>
+                ) : (
+                  recentProducts.map(p => (
+                    <tr key={p._id || p.sku} className="hover:bg-[#F8FAFC] transition-colors">
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-10 h-10 rounded-md border border-[#E2E8F0] bg-white p-0.5 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {p.image ? (
+                              <img src={p.image} alt={p.name} className="w-full h-full object-contain" />
+                            ) : (
+                              <Package className="w-5 h-5 text-[#94A3B8]" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[14px] font-semibold text-[#1E293B] block truncate max-w-[280px]">
+                              {p.name}
+                            </span>
+                            <span className="text-[12px] text-[#64748B] font-mono block mt-0.5">
+                              {p.sku || 'No SKU'}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-5 py-3.5 text-[14px] text-[#475569] font-medium">
+                        {p.brand || '—'}
+                      </td>
+
+                      <td className="px-5 py-3.5 text-[14px] font-semibold text-[#1E293B]">
+                        {p.price != null ? `₹${Number(p.price).toLocaleString('en-IN')}` : '—'}
+                      </td>
+
+                      <td className="px-5 py-3.5 text-[14px] text-[#475569]">
+                        {p.stock != null ? `${p.stock} units` : '—'}
+                      </td>
+
+                      <td className="px-5 py-3.5">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-[12px] font-medium ${
+                          p.isActive !== false
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                        }`}>
+                          {p.isActive !== false ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+
+                      <td className="px-5 py-3.5 text-right">
+                        <Link
+                          to="/products"
+                          className="text-[13px] font-semibold text-[#B8862D] hover:underline"
+                        >
+                          Edit
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
-
-          {/* Mobile Card Layout (Visible only on mobile screens < 640px) */}
-          <div className="sm:hidden divide-y divide-neutral-100">
-            {recentProducts.map(p => (
-              <div key={p.id || p.sku || p._id} className="p-4 flex items-center gap-3">
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  className="w-12 h-12 object-contain rounded-xl border border-neutral-200 p-1 bg-white flex-shrink-0"
-                  onError={e => {
-                    e.target.style.display = 'none';
-                  }}
-                />
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-semibold text-xs text-black line-clamp-1">{p.name}</h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="font-bold text-xs text-black">₹{p.price?.toLocaleString('en-IN')}</span>
-                    <span className="text-[10px] text-neutral-400 font-mono">({p.sku})</span>
-                  </div>
-                  <span className="text-[10px] text-neutral-500 block truncate mt-0.5">{p.category}</span>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex-shrink-0">
-                  Active
-                </span>
-              </div>
-            ))}
-          </div>
-
         </div>
-
       </main>
     </div>
   );

@@ -1,51 +1,95 @@
-import React from 'react';
-import { Menu, Database } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { API_BASE_URL } from '../../services/adminApi';
 
 export default function Topbar({ title, subtitle, onMenuClick }) {
   const { admin } = useAdminAuth();
+  const [serverStatus, setServerStatus] = useState('checking'); // 'connected' | 'offline' | 'checking'
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkHealth = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/health`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            setServerStatus(data.database === 'connected' ? 'connected' : 'local-ready');
+          }
+        } else {
+          if (isMounted) setServerStatus('offline');
+        }
+      } catch (e) {
+        if (isMounted) setServerStatus('offline');
+      }
+    };
+
+    checkHealth();
+    const interval = setInterval(checkHealth, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
-    <header className="bg-white border-b border-[#e2e3e1] min-h-16 px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3 flex-shrink-0 sticky top-0 z-30 shadow-2xs">
-      <div className="flex items-center gap-3 min-w-0">
-        {/* Mobile Hamburger Button */}
+    <header className="bg-white border-b border-[#E2E8F0] min-h-[70px] px-5 sm:px-8 py-3.5 flex items-center justify-between gap-4 flex-shrink-0 sticky top-0 z-30">
+      <div className="flex items-center gap-3.5 min-w-0">
+        {/* Mobile Hamburger */}
         <button
           type="button"
           onClick={onMenuClick}
-          className="lg:hidden p-2 -ml-1 text-neutral-700 hover:text-black hover:bg-neutral-100 rounded-xl transition-colors focus:outline-none"
+          className="lg:hidden p-2 -ml-1 text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] rounded-md transition-colors focus:outline-none"
           aria-label="Open navigation menu"
         >
           <Menu className="w-5 h-5" />
         </button>
 
         <div className="min-w-0">
-          <h2 className="font-['Manrope'] font-bold text-base sm:text-lg text-black tracking-tight leading-tight truncate">
+          <h1 className="text-[26px] font-bold text-[#1E293B] leading-tight tracking-[-0.025em] truncate">
             {title}
-          </h2>
+          </h1>
           {subtitle && (
-            <p className="font-['Inter'] text-[11px] text-neutral-500 truncate hidden sm:block">
+            <p className="text-[14px] text-[#64748B] font-normal leading-normal tracking-[-0.01em] truncate hidden sm:block mt-0.5">
               {subtitle}
             </p>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-        {/* MongoDB Status Pill */}
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-neutral-100/80 px-2.5 sm:px-3 py-1.5 rounded-full border border-neutral-200">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-          <span className="text-[11px] sm:text-xs font-semibold text-neutral-800 font-['Inter'] whitespace-nowrap">
-            <span className="hidden xs:inline">MongoDB </span>Connected
+      <div className="flex items-center gap-3.5 sm:gap-4 flex-shrink-0">
+        {/* Backend Status Badge */}
+        <div className={`flex items-center gap-2 px-3 py-1 rounded-md border text-[12px] font-medium tracking-tight ${
+          serverStatus === 'connected'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : serverStatus === 'local-ready'
+            ? 'bg-amber-50 border-amber-200 text-amber-800'
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+            serverStatus === 'connected'
+              ? 'bg-emerald-500'
+              : serverStatus === 'local-ready'
+              ? 'bg-amber-500'
+              : 'bg-red-500'
+            }`} />
+          <span className="whitespace-nowrap">
+            {serverStatus === 'connected'
+              ? 'Backend Live'
+              : serverStatus === 'local-ready'
+              ? 'Local Mode'
+              : 'Offline'}
           </span>
         </div>
 
-        {/* User Badge */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-black text-[#ffdf9c] flex items-center justify-center font-bold text-xs font-['Manrope'] flex-shrink-0 shadow-2xs">
+        {/* User Mini Avatar & Name */}
+        <div className="flex items-center gap-2.5 pl-3 border-l border-[#E2E8F0]">
+          <div className="w-8 h-8 rounded-md bg-[#F8F3E9] text-[#B8862D] border border-[#E2D9C8] flex items-center justify-center font-bold text-[13px] flex-shrink-0">
             {admin?.name?.charAt(0) || 'A'}
           </div>
-          <span className="text-xs font-bold text-black hidden md:inline truncate max-w-[120px]">
-            {admin?.name || 'Admin'}
+          <span className="text-[14px] font-semibold text-[#1E293B] hidden md:inline truncate max-w-[140px] tracking-tight">
+            {admin?.name || 'Administrator'}
           </span>
         </div>
       </div>

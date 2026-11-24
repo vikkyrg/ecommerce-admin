@@ -1,32 +1,48 @@
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Layers,
   Tag,
   Package,
-  FileSpreadsheet,
   LogOut,
   ExternalLink,
-  X
+  X,
+  CheckCircle2,
+  ChevronDown,
+  Mail,
+  Users
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 
 export default function Sidebar({ mobileOpen = false, onClose }) {
   const { admin, logout } = useAdminAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const navLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Categories', path: '/categories', icon: Layers },
-    { name: 'Brands', path: '/brands', icon: Tag },
-    { name: 'Products', path: '/products', icon: Package },
-    { name: 'Excel Import', path: '/import', icon: FileSpreadsheet }
+  const navSections = [
+    {
+      label: 'MAIN MENU',
+      items: [
+        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard }
+      ]
+    },
+    {
+      label: 'MANAGEMENT',
+      items: [
+        { name: 'Categories', path: '/categories', icon: Layers },
+        { name: 'Brands', path: '/brands', icon: Tag },
+        { name: 'Products', path: '/products', icon: Package },
+        { name: 'Customers', path: '/customers', icon: Users },
+        { name: 'Enquiries', path: '/enquiries', icon: Mail }
+      ]
+    }
   ];
 
   return (
@@ -35,117 +51,157 @@ export default function Sidebar({ mobileOpen = false, onClose }) {
       {mobileOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/40 transition-opacity lg:hidden"
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar Container: Fixed slide-over on mobile/tablet, static on lg+ */}
+      {/* Sidebar Container */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-[#141619] text-[#e0e2e6] flex flex-col justify-between border-r border-neutral-800 shadow-2xl transition-transform duration-300 ease-in-out select-none
-          lg:static lg:translate-x-0 lg:w-64 lg:shadow-none lg:z-auto
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        className={`fixed inset-y-0 left-0 z-50 w-[250px] bg-[#FFFFFF] text-[#1E293B] flex flex-col justify-between border-r border-[#E2E8F0] transition-transform duration-200 ease-in-out select-none
+          lg:static lg:translate-x-0 lg:w-[250px] lg:z-auto
+          ${mobileOpen ? 'translate-x-0 shadow-lg' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        {/* Brand Header */}
-        <div>
-          <div className="p-4 sm:p-5 border-b border-neutral-800/80 flex items-center justify-between gap-3">
+        {/* Top Half: Header & Nav */}
+        <div className="flex flex-col flex-1 min-h-0">
+          {/* Header */}
+          <div className="h-[70px] px-5 border-b border-[#E2E8F0] flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-md bg-black border border-neutral-800 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded border border-[#E2E8F0] bg-white flex items-center justify-center p-0.5 flex-shrink-0">
                 <img
-                  src="/logo.jpeg"
+                  src="/logo.png"
                   alt="NS Stone Logo"
-                  className="w-7 h-7 object-contain rounded"
-                  onError={e => {
-                    e.target.style.display = 'none';
-                  }}
+                  className="w-full h-full object-contain"
                 />
               </div>
+
               <div className="min-w-0">
-                <h1 className="font-['Manrope'] font-bold text-sm tracking-tight text-white leading-tight uppercase truncate">
-                  NS Stone Chemicals
-                </h1>
-                <span className="text-[10px] font-mono text-[#ffdf9c] font-semibold uppercase tracking-wider block">
-                  Admin Portal
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[16px] font-bold text-[#1E293B] leading-none tracking-tight truncate">
+                    NS Stone
+                  </span>
+                  <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-[#F8F3E9] text-[#B8862D] border border-[#E2D9C8] rounded">
+                    PRO
+                  </span>
+                </div>
+                <p className="text-[12px] font-normal text-[#64748B] leading-tight truncate mt-1">
+                  Chemicals Catalog
+                </p>
               </div>
             </div>
 
             {/* Mobile Close Button */}
             <button
               onClick={onClose}
-              className="lg:hidden p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+              className="lg:hidden p-1 rounded text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC]"
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="p-3 sm:p-4 space-y-1.5">
-            {navLinks.map(link => {
-              const Icon = link.icon;
-              return (
-                <NavLink
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => {
-                    if (onClose) onClose();
-                  }}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-semibold transition-all ${
-                      isActive
-                        ? 'bg-black text-[#ffdf9c] shadow-xs border border-neutral-700/60'
-                        : 'text-neutral-400 hover:text-white hover:bg-neutral-800/60'
-                    }`
-                  }
-                >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate">{link.name}</span>
-                </NavLink>
-              );
-            })}
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto py-5 px-3 space-y-6">
+            {navSections.map((section, idx) => (
+              <div key={idx}>
+                <div className="px-3 pb-2 text-[11px] font-semibold text-[#64748B] tracking-wider uppercase">
+                  {section.label}
+                </div>
+                <div className="space-y-1">
+                  {section.items.map(item => {
+                    const Icon = item.icon;
+                    const isActive =
+                      location.pathname === item.path ||
+                      (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
+
+                    return (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => {
+                          if (onClose) onClose();
+                        }}
+                        className={`h-[42px] flex items-center gap-3 px-3 rounded-md text-[14.5px] font-medium transition-colors ${isActive
+                          ? 'bg-[#F8F3E9] text-[#0F172A] border-l-[3px] border-[#B8862D] rounded-l-none font-semibold'
+                          : 'text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC]'
+                          }`}
+                      >
+                        <Icon
+                          className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-[#B8862D]' : 'text-[#64748B]'
+                            }`}
+                        />
+                        <span className="truncate">{item.name}</span>
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </div>
 
-        {/* Footer / User Profile & Logout */}
-        <div className="p-4 border-t border-neutral-800/80 space-y-3">
+        {/* Footer Area */}
+        <div className="border-t border-[#E2E8F0] p-3.5 space-y-2.5 bg-[#FFFFFF]">
+          {/* Customer Store */}
           <a
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-[11px] text-neutral-300 font-medium transition-colors"
+            className="h-[40px] flex items-center justify-between px-3 rounded-md border border-[#E2E8F0] text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] transition-colors"
           >
-            <span className="flex items-center gap-1.5">
-              <ExternalLink className="w-3.5 h-3.5 text-[#ffdf9c]" />
-              <span>Customer Website</span>
-            </span>
-            <span className="text-[10px] text-neutral-500 font-mono">Live</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <ExternalLink className="w-[17px] h-[17px] text-[#64748B] flex-shrink-0" />
+              <span className="text-[13.5px] font-medium truncate">Customer Store</span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[12px] font-semibold text-emerald-700">Live</span>
+            </div>
           </a>
 
-          <div className="pt-2 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-amber-500/20 text-[#ffdf9c] border border-amber-500/30 flex items-center justify-center font-bold text-xs font-['Manrope'] flex-shrink-0">
-                {admin?.name?.charAt(0) || 'A'}
-              </div>
-              <div className="min-w-0">
-                <span className="block text-xs font-bold text-white truncate leading-tight">
-                  {admin?.name || 'Administrator'}
-                </span>
-                <span className="text-[10px] text-neutral-400 truncate block">
-                  {admin?.email || 'admin@nsstonechemicals.com'}
-                </span>
-              </div>
-            </div>
-
+          {/* Admin Profile */}
+          <div className="relative">
             <button
-              onClick={handleLogout}
-              className="p-2 rounded-lg text-neutral-400 hover:text-rose-400 hover:bg-neutral-800 transition-colors flex-shrink-0"
-              title="Log Out"
-              aria-label="Log Out"
+              onClick={() => setShowProfileMenu(prev => !prev)}
+              className="w-full flex items-center justify-between p-2 rounded-md hover:bg-[#F8FAFC] transition-colors text-left"
+              aria-label="Admin Profile Menu"
             >
-              <LogOut className="w-4 h-4" />
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-md bg-[#F8F3E9] text-[#B8862D] border border-[#E2D9C8] flex items-center justify-center font-bold text-[13px] flex-shrink-0">
+                  {admin?.name?.charAt(0) || 'N'}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[13.5px] font-semibold text-[#1E293B] truncate leading-tight tracking-tight">
+                      {admin?.name || 'NS Admin'}
+                    </span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#B8862D] flex-shrink-0" />
+                  </div>
+                  <span className="text-[11.5px] font-normal text-[#64748B] truncate block leading-tight mt-0.5">
+                    {admin?.email || 'admin@nsstonechemicals.com'}
+                  </span>
+                </div>
+              </div>
+
+              <ChevronDown
+                className={`w-4 h-4 text-[#64748B] flex-shrink-0 transition-transform ${showProfileMenu ? 'rotate-180' : ''
+                  }`}
+              />
             </button>
+
+            {/* Profile Dropdown */}
+            {showProfileMenu && (
+              <div className="absolute bottom-full left-0 right-0 mb-1.5 bg-white border border-[#E2E8F0] rounded-md shadow-sm py-1 z-20">
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-3 py-2 text-left text-[13px] font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign out</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </aside>

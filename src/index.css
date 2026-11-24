@@ -2,9 +2,184 @@
 
 @layer base {
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #1E293B;
+    background-color: #F8FAFC;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.011em;
   }
+  
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Manrope', 'Inter', sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+
+/* Centralized ERP Design & Typography Utility System */
+@layer components {
+  /* Page Typography Hierarchy */
+  .erp-page-title {
+    font-size: 26px;
+    line-height: 1.25;
+    font-weight: 700;
+    color: #1E293B;
+    letter-spacing: -0.025em;
+  }
+  
+  .erp-page-subtitle {
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 400;
+    color: #64748B;
+    letter-spacing: -0.01em;
+  }
+
+  .erp-section-title {
+    font-size: 19px;
+    line-height: 1.3;
+    font-weight: 650;
+    color: #1E293B;
+    letter-spacing: -0.02em;
+  }
+
+  .erp-card-title {
+    font-size: 15px;
+    line-height: 1.35;
+    font-weight: 600;
+    color: #1E293B;
+    letter-spacing: -0.015em;
+  }
+
+  .erp-metric-value {
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: #1E293B;
+    letter-spacing: -0.03em;
+  }
+
+  /* Form & Controls */
+  .erp-label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1E293B;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .erp-input {
+    height: 42px;
+    padding-left: 14px;
+    padding-right: 14px;
+    background-color: #FFFFFF;
+    color: #1E293B;
+    font-size: 14px;
+    font-weight: 400;
+    border: 1px solid #E2E8F0;
+    border-radius: 7px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    outline: none;
+  }
+
+  .erp-input::placeholder {
+    color: #94A3B8;
+    font-weight: 400;
+  }
+  .erp-input:focus {
+    border-color: #B8862D;
+    box-shadow: 0 0 0 1px #B8862D;
+  }
+
+  .erp-select {
+    height: 42px;
+    padding-left: 14px;
+    padding-right: 32px;
+    background-color: #FFFFFF;
+    color: #1E293B;
+    font-size: 14px;
+    font-weight: 400;
+    border: 1px solid #E2E8F0;
+    border-radius: 7px;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    outline: none;
+  }
+
+  .erp-select:focus {
+    border-color: #B8862D;
+    box-shadow: 0 0 0 1px #B8862D;
+  }
+
+
+  /* Table Controls */
+  .erp-th {
+    padding: 12px 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #64748B;
+    letter-spacing: 0.01em;
+    text-transform: capitalize;
+  }
+
+  .erp-td {
+    padding: 13px 16px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #1E293B;
+  }
+
+  /* Buttons */
+  .erp-btn-primary {
+    height: 40px;
+    padding-left: 16px;
+    padding-right: 16px;
+    background-color: #B8862D;
+    color: #FFFFFF;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+  }
+
+  .erp-btn-primary:hover {
+    background-color: #9c7126;
+  }
+  .erp-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .erp-btn-secondary {
+    height: 40px;
+    padding-left: 16px;
+    padding-right: 16px;
+    background-color: #FFFFFF;
+    color: #1E293B;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border: 1px solid #E2E8F0;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+  }
+
+  .erp-btn-secondary:hover {
+    background-color: #F8FAFC;
+    border-color: #CBD5E1;
   }
 }
