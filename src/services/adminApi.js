@@ -65,10 +65,52 @@ export const deleteAdminCategory = async id => {
   return data;
 };
 
+/* ================= BRANDS ================= */
+export const fetchAdminBrands = async (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const res = await fetch(`${API_BASE_URL}/brands?${query}`, {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error('Failed to fetch brands');
+  return await res.json();
+};
+
+export const createAdminBrand = async brandData => {
+  const res = await fetch(`${API_BASE_URL}/brands`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(brandData)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to create brand');
+  return data;
+};
+
+export const updateAdminBrand = async (id, brandData) => {
+  const res = await fetch(`${API_BASE_URL}/brands/${id}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(brandData)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to update brand');
+  return data;
+};
+
+export const deleteAdminBrand = async id => {
+  const res = await fetch(`${API_BASE_URL}/brands/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders()
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to delete brand');
+  return data;
+};
+
 /* ================= PRODUCTS ================= */
 export const fetchAdminProducts = async (params = {}) => {
   const query = new URLSearchParams(params).toString();
-  const res = await fetch(`${API_BASE_URL}/products?${query}&limit=200`, {
+  const res = await fetch(`${API_BASE_URL}/products?activeOnly=false&${query}&limit=300`, {
     headers: getAuthHeaders()
   });
   if (!res.ok) throw new Error('Failed to fetch products');
@@ -104,5 +146,39 @@ export const deleteAdminProduct = async id => {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'Failed to delete product');
+  return data;
+};
+
+/* ================= CATALOG IMPORT & AI IMAGES ================= */
+export const previewCatalogImportApi = async (payload = {}) => {
+  const res = await fetch(`${API_BASE_URL}/catalog/preview`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to preview catalog import');
+  return data;
+};
+
+export const confirmCatalogImportApi = async (overwriteExisting = false) => {
+  const res = await fetch(`${API_BASE_URL}/catalog/confirm-import`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ overwriteExisting })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to confirm catalog import');
+  return data;
+};
+
+export const generateAIProductImageApi = async (productName, brand, category) => {
+  const res = await fetch(`${API_BASE_URL}/catalog/ai-generate-image`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ productName, brand, category })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to generate AI images');
   return data;
 };

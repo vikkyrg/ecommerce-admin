@@ -3,7 +3,9 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Layers,
+  Tag,
   Package,
+  FileSpreadsheet,
   LogOut,
   ExternalLink,
   X
@@ -22,7 +24,9 @@ export default function Sidebar({ mobileOpen = false, onClose }) {
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Categories', path: '/categories', icon: Layers },
-    { name: 'Products', path: '/products', icon: Package }
+    { name: 'Brands', path: '/brands', icon: Tag },
+    { name: 'Products', path: '/products', icon: Package },
+    { name: 'Excel Import', path: '/import', icon: FileSpreadsheet }
   ];
 
   return (

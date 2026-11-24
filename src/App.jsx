@@ -5,7 +5,9 @@ import AdminLayout from './components/layout/AdminLayout';
 import AdminLogin from './pages/AdminLogin';
 import Dashboard from './pages/Dashboard';
 import CategoryManagement from './pages/CategoryManagement';
+import BrandManagement from './pages/BrandManagement';
 import ProductManagement from './pages/ProductManagement';
+import ExcelImport from './pages/ExcelImport';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAdminAuth();
@@ -40,7 +42,9 @@ export default function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/categories" element={<CategoryManagement />} />
+            <Route path="/brands" element={<BrandManagement />} />
             <Route path="/products" element={<ProductManagement />} />
+            <Route path="/import" element={<ExcelImport />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
