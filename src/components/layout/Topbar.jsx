@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
-import { API_BASE_URL } from '../../services/adminApi';
+import api from '../../services/apiClient';
 
 export default function Topbar({ title, subtitle, onMenuClick }) {
   const { admin } = useAdminAuth();
@@ -11,16 +11,11 @@ export default function Topbar({ title, subtitle, onMenuClick }) {
     let isMounted = true;
     const checkHealth = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/health`);
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted) {
-            setServerStatus(data.database === 'connected' ? 'connected' : 'local-ready');
-          }
-        } else {
-          if (isMounted) setServerStatus('offline');
+        const { data } = await api.get('/health');
+        if (isMounted) {
+          setServerStatus(data.database === 'connected' ? 'connected' : 'local-ready');
         }
-      } catch (e) {
+      } catch {
         if (isMounted) setServerStatus('offline');
       }
     };
