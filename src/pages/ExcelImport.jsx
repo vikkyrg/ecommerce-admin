@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { AlertCircle, CheckCircle2, FileSpreadsheet, ShieldCheck, Upload } from 'lucide-react';
 import Topbar from '../components/layout/Topbar';
 import { previewCatalogImportApi, confirmCatalogImportApi } from '../services/adminApi';
 
 export default function ExcelImport() {
+  const { toggleMobileMenu } = useOutletContext() || {};
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [preview, setPreview] = useState(null);
@@ -97,10 +99,14 @@ export default function ExcelImport() {
 
   return (
     <div className="flex-1 flex flex-col min-h-full">
-      <Topbar title="Catalog Workbook Review" subtitle="Inspect and safely replace catalog records" />
+      <Topbar
+        title="Catalog Workbook Review"
+        subtitle="Inspect and safely replace catalog records"
+        onMenuClick={toggleMobileMenu}
+      />
 
-      <main className="p-4 sm:p-6 lg:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
-        <section className="bg-white border border-[#E2E8F0] rounded-lg p-5 sm:p-6 space-y-4">
+      <main className="min-w-0 p-3.5 sm:p-6 lg:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
+        <section className="space-y-4 rounded-lg border border-[#E2E8F0] bg-white p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h2 className="text-[16px] font-semibold text-[#1E293B]">Workbook Ingestion</h2>
@@ -132,7 +138,7 @@ export default function ExcelImport() {
 
         {preview && (
           <>
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className="bg-white border border-[#E2E8F0] rounded-lg p-4">
                 <span className="text-[11px] font-semibold uppercase text-[#64748B]">Total Entries</span>
                 <p className="text-[24px] font-[650] text-[#1E293B] mt-1">{preview.summary.totalEntries}</p>
@@ -152,7 +158,7 @@ export default function ExcelImport() {
             </section>
 
             <section className="bg-white border border-[#E2E8F0] rounded-lg p-5 space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h3 className="text-[16px] font-semibold text-[#1E293B]">Required Review Items</h3>
                   <p className="text-[12px] text-[#64748B] mt-0.5">

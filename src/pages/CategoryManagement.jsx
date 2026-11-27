@@ -148,12 +148,12 @@ export default function CategoryManagement() {
         onMenuClick={toggleMobileMenu}
       />
 
-      <main className="p-4 sm:p-6 lg:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
+      <main className="min-w-0 p-3.5 sm:p-6 lg:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
         {/* Search & Actions Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-lg border border-[#E2E8F0]">
           <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {/* Search Input */}
-            <div className="relative flex-1 max-w-md">
+            <div className="relative w-full min-w-0 flex-1 sm:max-w-md">
               <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -165,7 +165,7 @@ export default function CategoryManagement() {
             </div>
 
             {/* Status Dropdown */}
-            <div className="relative min-w-[160px]">
+            <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[160px]">
               <select
                 value={selectedStatus}
                 onChange={e => setSelectedStatus(e.target.value)}
@@ -272,7 +272,7 @@ export default function CategoryManagement() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => openEditModal(cat)}
-                      className="p-1.5 text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] rounded transition-colors"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded text-[#64748B] transition-colors hover:bg-[#F8FAFC] hover:text-[#1E293B]"
                       title="Edit Category"
                       aria-label="Edit Category"
                     >
@@ -280,7 +280,7 @@ export default function CategoryManagement() {
                     </button>
                     <button
                       onClick={() => setDeleteId(cat._id || cat.id || cat.slug)}
-                      className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
                       title="Delete Category"
                       aria-label="Delete Category"
                     >
@@ -295,22 +295,22 @@ export default function CategoryManagement() {
 
         {/* Add/Edit Category Modal */}
         {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
-            <div className="bg-white rounded-lg border border-[#E2E8F0] max-w-lg w-full p-5 sm:p-6 shadow-lg relative">
-              <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0] mb-4">
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-slate-900/40 p-2 sm:items-center sm:p-4">
+            <div className="relative my-auto flex max-h-[calc(100dvh-1rem)] w-full max-w-lg flex-col overflow-y-auto rounded-lg border border-[#E2E8F0] bg-white shadow-lg sm:max-h-[90vh]">
+              <div className="mb-4 flex flex-shrink-0 items-center justify-between border-b border-[#E2E8F0] px-4 pb-3 pt-4 sm:px-6 sm:pt-6">
                 <h3 className="text-[16px] font-semibold text-[#1E293B]">
                   {editingCategory ? 'Edit Category' : 'Create Category'}
                 </h3>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="p-1 text-[#64748B] hover:text-[#1E293B] rounded hover:bg-[#F8FAFC]"
-                  aria-label="Close modal"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#1E293B]"
+                  aria-label="Close category form"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
                 <div>
                   <label className="block text-[13px] font-medium text-[#1E293B] mb-1.5">Category Name *</label>
                   <input
@@ -365,18 +365,18 @@ export default function CategoryManagement() {
                   </label>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
+                <div className="flex flex-col-reverse gap-2 border-t border-[#E2E8F0] pt-4 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="h-[38px] px-4 border border-[#E2E8F0] rounded-md hover:bg-[#F8FAFC] text-[13px] font-semibold text-[#1E293B]"
+                    className="h-11 w-full rounded-md border border-[#E2E8F0] px-4 text-[13px] font-semibold text-[#1E293B] hover:bg-[#F8FAFC] sm:h-[38px] sm:w-auto"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="h-[38px] px-4 bg-[#B8862D] hover:bg-[#9c7126] text-white font-semibold text-[13px] rounded-md transition-colors disabled:opacity-50"
+                    className="h-11 w-full rounded-md bg-[#B8862D] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#9c7126] disabled:opacity-50 sm:h-[38px] sm:w-auto"
                   >
                     {submitting ? 'Saving...' : editingCategory ? 'Update Category' : 'Create Category'}
                   </button>
@@ -388,8 +388,8 @@ export default function CategoryManagement() {
 
         {/* Delete Confirmation Modal */}
         {deleteId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
-            <div className="bg-white rounded-lg border border-[#E2E8F0] max-w-sm w-full p-6 space-y-4 shadow-lg">
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-3 sm:items-center sm:p-4">
+            <div className="my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-sm space-y-4 overflow-y-auto rounded-lg border border-[#E2E8F0] bg-white p-4 shadow-lg sm:p-6">
               <div className="flex items-center gap-2.5 text-red-600">
                 <AlertCircle className="w-5 h-5" />
                 <h4 className="text-[16px] font-semibold text-[#1E293B]">Confirm Deletion</h4>
@@ -397,16 +397,16 @@ export default function CategoryManagement() {
               <p className="text-[13px] text-[#64748B] leading-relaxed">
                 Categories assigned to brands or products cannot be deleted. Reassign or delete those records first.
               </p>
-              <div className="flex items-center justify-end gap-2.5 pt-2">
+              <div className="flex flex-wrap items-center justify-end gap-2.5 pt-2">
                 <button
                   onClick={() => setDeleteId(null)}
-                  className="h-[36px] px-3.5 border border-[#E2E8F0] rounded-md text-[13px] font-medium text-[#1E293B] hover:bg-[#F8FAFC]"
+                  className="h-10 px-3.5 border border-[#E2E8F0] rounded-md text-[13px] font-medium text-[#1E293B] hover:bg-[#F8FAFC]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="h-[36px] px-3.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-[13px] font-semibold"
+                  className="h-10 px-3.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-[13px] font-semibold"
                 >
                   Delete Category
                 </button>

@@ -26,6 +26,7 @@ if (import.meta.env.PROD &&
 
 export const API_ORIGIN = parsedApiUrl.origin;
 export const API_BASE_URL = `${API_ORIGIN}/api`;
+export const ADMIN_UNAUTHORIZED_EVENT = 'ns-stone-admin-unauthorized';
 
 export const resolveImageUrl = imageUrl => {
   if (typeof imageUrl !== 'string') return imageUrl;
@@ -78,6 +79,13 @@ api.interceptors.response.use(
     return response;
   },
   error => {
+    if (
+      (error.response?.status === 401 || error.response?.status === 403) &&
+      typeof window !== 'undefined'
+    ) {
+      window.dispatchEvent(new Event(ADMIN_UNAUTHORIZED_EVENT));
+    }
+
     const responseBody = error.response?.data;
     const message = typeof responseBody === 'string'
       ? responseBody.trim().slice(0, 200)

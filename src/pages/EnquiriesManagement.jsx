@@ -173,9 +173,9 @@ export default function EnquiriesManagement() {
         onMenuClick={toggleMobileMenu}
       />
 
-      <main className="p-5 sm:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
+      <main className="min-w-0 p-3.5 sm:p-6 lg:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
         {/* Metric Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="bg-white p-4.5 rounded-lg border border-[#E2E8F0]">
             <span className="text-[12px] font-semibold uppercase text-[#64748B]">Total Enquiries</span>
             <p className="text-[28px] font-bold text-[#1E293B] mt-1">{counts.total || totalEnquiries}</p>
@@ -195,8 +195,8 @@ export default function EnquiriesManagement() {
         </div>
 
         {/* Search & Filter Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-lg border border-[#E2E8F0]">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col items-stretch justify-between gap-4 rounded-lg border border-[#E2E8F0] bg-white p-4 sm:flex-row sm:items-center sm:p-5">
+          <div className="relative w-full min-w-0 flex-1 sm:max-w-md">
             <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -210,8 +210,8 @@ export default function EnquiriesManagement() {
             />
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative min-w-[160px]">
+          <div className="flex w-full items-center gap-3 sm:w-auto">
+            <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[160px]">
               <select
                 value={statusFilter}
                 onChange={e => {
@@ -270,8 +270,8 @@ export default function EnquiriesManagement() {
           </div>
         ) : (
           <div className="bg-white border border-[#E2E8F0] rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto overscroll-x-contain">
+              <table className="w-full min-w-[900px] text-left">
                 <thead className="bg-[#F8FAFC] text-[#64748B] border-b border-[#E2E8F0]">
                   <tr>
                     <th className="px-5 py-3.5 text-[12.5px] font-semibold">Enquiry ID</th>
@@ -335,7 +335,7 @@ export default function EnquiriesManagement() {
                         <select
                           value={enq.status}
                           onChange={e => handleStatusChange(enq._id, e.target.value)}
-                          className={`px-2.5 py-1 rounded text-[12px] font-semibold border cursor-pointer ${getStatusBadge(
+                          className={`min-h-10 px-2.5 py-1 rounded text-[12px] font-semibold border cursor-pointer ${getStatusBadge(
                             enq.status
                           )}`}
                         >
@@ -351,15 +351,17 @@ export default function EnquiriesManagement() {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => openEnquiryModal(enq._id)}
-                            className="p-1.5 text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] rounded transition-colors"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded text-[#64748B] transition-colors hover:bg-[#F8FAFC] hover:text-[#1E293B]"
                             title="View Enquiry Details"
+                            aria-label="View Enquiry Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setDeleteConfirmId(enq._id)}
-                            className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
                             title="Delete Enquiry"
+                            aria-label="Delete Enquiry"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -382,7 +384,7 @@ export default function EnquiriesManagement() {
                   type="button"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="h-[34px] px-3.5 border border-[#E2E8F0] rounded text-[#1E293B] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[13px]"
+                  className="h-10 px-3.5 border border-[#E2E8F0] rounded text-[#1E293B] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[13px]"
                 >
                   Previous
                 </button>
@@ -393,7 +395,7 @@ export default function EnquiriesManagement() {
                   type="button"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage >= totalPages}
-                  className="h-[34px] px-3.5 border border-[#E2E8F0] rounded text-[#1E293B] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[13px]"
+                  className="h-10 px-3.5 border border-[#E2E8F0] rounded text-[#1E293B] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[13px]"
                 >
                   Next
                 </button>
@@ -405,8 +407,8 @@ export default function EnquiriesManagement() {
 
       {/* Enquiry Details Modal */}
       {selectedEnquiry && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-white border border-[#E2E8F0] rounded-lg shadow-lg overflow-hidden my-auto max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-slate-900/40 p-2 sm:items-center sm:p-4">
+          <div className="relative my-auto flex max-h-[calc(100dvh-1rem)] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-[#E2E8F0] bg-white shadow-lg animate-in fade-in zoom-in-95 duration-150 sm:max-h-[90vh]">
             {/* Header */}
             <div className="px-6 py-4.5 border-b border-[#E2E8F0] flex items-center justify-between">
               <div>
@@ -419,18 +421,19 @@ export default function EnquiriesManagement() {
               </div>
               <button
                 onClick={() => setSelectedEnquiry(null)}
-                className="p-1 text-[#64748B] hover:text-[#1E293B] rounded-md hover:bg-[#F8FAFC]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#1E293B]"
+                aria-label="Close enquiry details"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-5">
+            <div className="min-h-0 space-y-5 overflow-y-auto p-4 sm:p-6">
               {/* Customer Profile Card with Direct Actions */}
               <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[15px] font-bold text-[#1E293B]">
                       {selectedEnquiry.customerName}
                     </span>
@@ -453,7 +456,7 @@ export default function EnquiriesManagement() {
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-[36px] px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12.5px] font-semibold rounded-md transition-colors inline-flex items-center gap-1.5"
+                    className="h-10 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12.5px] font-semibold rounded-md transition-colors inline-flex items-center gap-1.5"
                   >
                     <Phone className="w-3.5 h-3.5" />
                     <span>WhatsApp</span>
@@ -463,7 +466,7 @@ export default function EnquiriesManagement() {
                     href={`mailto:${selectedEnquiry.email}?subject=${encodeURIComponent(
                       `NS Stone Chemicals - Regarding your enquiry: ${selectedEnquiry.subject || selectedEnquiry.productName}`
                     )}`}
-                    className="h-[36px] px-3.5 border border-[#E2E8F0] bg-white hover:bg-slate-100 text-[#1E293B] text-[12.5px] font-semibold rounded-md transition-colors inline-flex items-center gap-1.5"
+                    className="h-10 px-3.5 border border-[#E2E8F0] bg-white hover:bg-slate-100 text-[#1E293B] text-[12.5px] font-semibold rounded-md transition-colors inline-flex items-center gap-1.5"
                   >
                     <Mail className="w-3.5 h-3.5" />
                     <span>Send Email</span>
@@ -507,7 +510,7 @@ export default function EnquiriesManagement() {
               </div>
 
               {/* Status Update */}
-              <div className="flex items-center gap-3 pt-1">
+              <div className="flex flex-wrap items-center gap-3 pt-1">
                 <label className="text-[13px] font-bold text-[#1E293B]">Enquiry Status:</label>
                 <select
                   value={selectedEnquiry.status}
@@ -549,7 +552,7 @@ export default function EnquiriesManagement() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E2E8F0] bg-[#F8FAFC] p-4">
               <button
                 type="button"
                 onClick={() => setDeleteConfirmId(selectedEnquiry._id)}
@@ -573,8 +576,8 @@ export default function EnquiriesManagement() {
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
-          <div className="bg-white border border-[#E2E8F0] rounded-lg p-6 max-w-sm w-full space-y-4 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-3 sm:items-center sm:p-4">
+          <div className="my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-sm space-y-4 overflow-y-auto rounded-lg border border-[#E2E8F0] bg-white p-4 shadow-lg sm:p-6">
             <div className="flex items-center gap-2.5 text-red-600">
               <AlertCircle className="w-5 h-5" />
               <h3 className="font-semibold text-[17px] text-[#1E293B]">Delete Enquiry</h3>
@@ -582,7 +585,7 @@ export default function EnquiriesManagement() {
             <p className="text-[13.5px] text-[#64748B] leading-relaxed">
               Are you sure you want to delete this enquiry? This action cannot be undone.
             </p>
-            <div className="flex items-center justify-end gap-2.5 pt-2">
+            <div className="flex flex-wrap items-center justify-end gap-2.5 pt-2">
               <button
                 onClick={() => setDeleteConfirmId(null)}
                 className="h-[36px] px-3.5 rounded-md border border-[#E2E8F0] text-[13px] text-[#1E293B] font-medium hover:bg-[#F8FAFC]"

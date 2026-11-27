@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import Topbar from '../components/layout/Topbar';
 import { fetchAdminCategories, fetchAdminProducts } from '../services/adminApi';
+import { getProductStockStatus } from '../utils/productStock';
 
 export default function Dashboard() {
   const { toggleMobileMenu } = useOutletContext() || {};
@@ -29,6 +30,19 @@ export default function Dashboard() {
 
   const activeProducts = products.filter(p => p.isActive !== false);
   const recentProducts = products.slice(0, 8);
+  const totalAvailableStock = products.reduce(
+    (total, product) => total + (Number.isSafeInteger(product.stock) && product.stock > 0 ? product.stock : 0),
+    0
+  );
+  const outOfStockProducts = products.filter(product =>
+    getProductStockStatus(product.stock) === 'Out of Stock'
+  ).length;
+  const lowStockProducts = products.filter(product =>
+    getProductStockStatus(product.stock) === 'Low Stock'
+  ).length;
+  const criticalStockProducts = products.filter(product =>
+    getProductStockStatus(product.stock) === 'Critical Stock'
+  ).length;
 
   return (
     <div className="flex-1 flex flex-col min-h-full">
@@ -38,7 +52,7 @@ export default function Dashboard() {
         onMenuClick={toggleMobileMenu}
       />
 
-      <main className="p-5 sm:p-8 space-y-7 flex-1 max-w-7xl w-full mx-auto">
+      <main className="min-w-0 p-3.5 sm:p-6 lg:p-8 space-y-7 flex-1 max-w-7xl w-full mx-auto">
         {error && (
           <div role="alert" className="p-4 rounded-md border border-red-200 bg-red-50 text-red-700 text-[13.5px]">
             {error}
@@ -51,7 +65,7 @@ export default function Dashboard() {
             <h2 className="text-[18px] font-[650] text-[#1E293B] tracking-[-0.015em]">Quick Catalog Actions</h2>
             <p className="text-[14px] text-[#64748B] mt-0.5 font-normal">Direct shortcuts to add items or create new application categories.</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               to="/categories?action=new"
               className="flex-1 sm:flex-none h-[40px] px-4 bg-white hover:bg-[#F8FAFC] text-[#1E293B] text-[13.5px] font-semibold border border-[#E2E8F0] rounded-md transition-colors inline-flex items-center justify-center gap-2"
@@ -71,7 +85,7 @@ export default function Dashboard() {
         </div>
 
         {/* 4 Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-4">
           {/* Total Categories */}
           <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] flex flex-col justify-between">
             <div>
@@ -148,9 +162,29 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-[18px] font-[650] text-[#1E293B]">Inventory Summary</h2>
+            <p className="text-[13px] text-[#64748B] mt-0.5">Live stock quantities across the product catalog.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: 'Total Available Stock', value: totalAvailableStock, color: 'text-[#1E293B]' },
+              { label: 'Out of Stock', value: outOfStockProducts, color: 'text-red-700' },
+              { label: 'Low Stock (6-10)', value: lowStockProducts, color: 'text-amber-700' },
+              { label: 'Critical Stock (1-5)', value: criticalStockProducts, color: 'text-orange-700' }
+            ].map(item => (
+              <div key={item.label} className="bg-white p-5 rounded-lg border border-[#E2E8F0]">
+                <p className="text-[12px] font-semibold uppercase tracking-wider text-[#64748B]">{item.label}</p>
+                <p className={`text-[28px] font-bold mt-2 ${item.color}`}>{loading ? '...' : item.value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Recent Products Table */}
         <div className="bg-white rounded-lg border border-[#E2E8F0] overflow-hidden">
-          <div className="p-5 border-b border-[#E2E8F0] flex items-center justify-between">
+          <div className="flex flex-col gap-3 border-b border-[#E2E8F0] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
             <div>
               <h2 className="text-[18px] font-[650] text-[#1E293B] tracking-[-0.015em]">Recently Updated Products</h2>
               <p className="text-[14px] text-[#64748B] mt-0.5">Specifications and inventory balances of items recently modified in your catalog.</p>
@@ -164,8 +198,8 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="overflow-x-auto overscroll-x-contain">
+            <table className="w-full min-w-[760px] text-left">
               <thead className="bg-[#F8FAFC] text-[#64748B] border-b border-[#E2E8F0]">
                 <tr>
                   <th className="px-5 py-3.5 text-[12.5px] font-semibold">Product Title</th>

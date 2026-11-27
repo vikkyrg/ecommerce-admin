@@ -1,13 +1,32 @@
 @import "tailwindcss";
 
 @layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-height: 100%;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #1E293B;
     background-color: #F8FAFC;
+    margin: 0;
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.011em;
+  }
+
+  #root {
+    min-height: 100dvh;
+  }
+
+  input,
+  select,
+  textarea {
+    max-width: 100%;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -181,5 +200,11 @@
   .erp-btn-secondary:hover {
     background-color: #F8FAFC;
     border-color: #CBD5E1;
+  }
+}
+
+@media (max-width: 399px) {
+  .topbar-status-label {
+    display: none;
   }
 }

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { loginAdminApi } from '../services/adminApi';
+import { loginAdminApi, verifyAdminSession } from '../services/adminApi';
+import { ADMIN_UNAUTHORIZED_EVENT } from '../services/apiClient';
 
 const AdminAuthContext = createContext();
 
@@ -9,18 +10,50 @@ export const AdminAuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
+    let active = true;
+    const clearSession = () => {
+      localStorage.removeItem('ns_stone_admin_token');
+      localStorage.removeItem('ns_stone_admin_user');
+      if (active) {
+        setToken(null);
+        setAdmin(null);
+      }
+    };
+    const handleUnauthorized = () => clearSession();
+    window.addEventListener(ADMIN_UNAUTHORIZED_EVENT, handleUnauthorized);
+
+    const restoreSession = async () => {
       const storedToken = localStorage.getItem('ns_stone_admin_token');
       const storedAdmin = localStorage.getItem('ns_stone_admin_user');
-      if (storedToken && storedAdmin) {
-        setToken(storedToken);
-        setAdmin(JSON.parse(storedAdmin));
+
+      if (!storedToken || !storedAdmin) {
+        clearSession();
+        if (active) setLoading(false);
+        return;
       }
-    } catch (e) {
-      console.warn('Failed to parse admin credentials:', e);
-    } finally {
-      setLoading(false);
-    }
+
+      try {
+        const parsedAdmin = JSON.parse(storedAdmin);
+        await verifyAdminSession();
+        if (active) {
+          setToken(storedToken);
+          setAdmin(parsedAdmin);
+        }
+      } catch (error) {
+        clearSession();
+        if (error.response?.status !== 401 && error.response?.status !== 403) {
+          console.error('Unable to verify the saved admin session:', error);
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    restoreSession();
+    return () => {
+      active = false;
+      window.removeEventListener(ADMIN_UNAUTHORIZED_EVENT, handleUnauthorized);
+    };
   }, []);
 
   const login = async (email, password) => {

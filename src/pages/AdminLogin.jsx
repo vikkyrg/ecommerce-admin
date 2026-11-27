@@ -34,7 +34,7 @@ export default function AdminLogin() {
         
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-white border border-[#E2E8F0] rounded-md flex items-center justify-center mx-auto p-1">
+          <div className="w-14 h-14 bg-white border border-[#E2E8F0] rounded-md flex items-center justify-center mx-auto p-1">
             <img
               src="/logo.png"
               alt="NS Stone Logo"

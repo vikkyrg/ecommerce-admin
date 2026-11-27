@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   ChevronDown,
   Mail,
-  Users
+  Users,
+  ShoppingBag
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 
@@ -36,6 +37,7 @@ export default function Sidebar({ mobileOpen = false, onClose }) {
     {
       label: 'MANAGEMENT',
       items: [
+        { name: 'Orders', path: '/orders', icon: ShoppingBag },
         { name: 'Categories', path: '/categories', icon: Layers },
         { name: 'Brands', path: '/brands', icon: Tag },
         { name: 'Products', path: '/products', icon: Package },
@@ -49,16 +51,17 @@ export default function Sidebar({ mobileOpen = false, onClose }) {
     <>
       {/* Mobile Backdrop Overlay */}
       {mobileOpen && (
-        <div
+        <button
+          type="button"
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-slate-900/40 transition-opacity lg:hidden"
-          aria-hidden="true"
+          className="fixed inset-0 z-40 cursor-default bg-slate-900/50 transition-opacity lg:hidden"
+          aria-label="Close navigation menu"
         />
       )}
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[250px] bg-[#FFFFFF] text-[#1E293B] flex flex-col justify-between border-r border-[#E2E8F0] transition-transform duration-200 ease-in-out select-none
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(84vw,280px)] flex-col justify-between border-r border-[#E2E8F0] bg-[#FFFFFF] text-[#1E293B] transition-transform duration-300 ease-in-out select-none
           lg:static lg:translate-x-0 lg:w-[250px] lg:z-auto
           ${mobileOpen ? 'translate-x-0 shadow-lg' : '-translate-x-full lg:translate-x-0'}
         `}
@@ -68,7 +71,7 @@ export default function Sidebar({ mobileOpen = false, onClose }) {
           {/* Header */}
           <div className="h-[70px] px-5 border-b border-[#E2E8F0] flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded border border-[#E2E8F0] bg-white flex items-center justify-center p-0.5 flex-shrink-0">
+              <div className="w-10 h-10 rounded border border-[#E2E8F0] bg-white flex items-center justify-center p-0.5 flex-shrink-0">
                 <img
                   src="/logo.png"
                   alt="NS Stone Logo"
@@ -94,8 +97,9 @@ export default function Sidebar({ mobileOpen = false, onClose }) {
             {/* Mobile Close Button */}
             <button
               onClick={onClose}
-              className="lg:hidden p-1 rounded text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC]"
+              className="h-11 w-11 rounded text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] inline-flex items-center justify-center lg:hidden"
               aria-label="Close menu"
+              aria-expanded={mobileOpen}
             >
               <X className="w-5 h-5" />
             </button>
@@ -122,7 +126,7 @@ export default function Sidebar({ mobileOpen = false, onClose }) {
                         onClick={() => {
                           if (onClose) onClose();
                         }}
-                        className={`h-[42px] flex items-center gap-3 px-3 rounded-md text-[14.5px] font-medium transition-colors ${isActive
+                        className={`min-h-[44px] flex items-center gap-3 px-3 rounded-md text-[14.5px] font-medium transition-colors ${isActive
                           ? 'bg-[#F8F3E9] text-[#0F172A] border-l-[3px] border-[#B8862D] rounded-l-none font-semibold'
                           : 'text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC]'
                           }`}
@@ -148,7 +152,7 @@ export default function Sidebar({ mobileOpen = false, onClose }) {
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="h-[40px] flex items-center justify-between px-3 rounded-md border border-[#E2E8F0] text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] transition-colors"
+            className="min-h-[44px] flex items-center justify-between px-3 rounded-md border border-[#E2E8F0] text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] transition-colors"
           >
             <div className="flex items-center gap-2 min-w-0">
               <ExternalLink className="w-[17px] h-[17px] text-[#64748B] flex-shrink-0" />

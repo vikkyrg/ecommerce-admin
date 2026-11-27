@@ -7,6 +7,9 @@ const responseData = response => response.data;
 export const loginAdminApi = (email, password) =>
   api.post('/admin/auth/login', { email, password }).then(responseData);
 
+export const verifyAdminSession = () =>
+  api.get('/admin/auth/me').then(responseData);
+
 export const fetchAdminCategories = () =>
   api.get('/categories', { params: { all: true } }).then(responseData);
 
@@ -63,8 +66,26 @@ export const createAdminProduct = productData =>
 export const updateAdminProduct = (id, productData) =>
   api.put(`/products/${encodeURIComponent(id)}`, productData).then(responseData);
 
+export const updateAdminProductPrice = (id, pricingData) =>
+  api.patch(`/products/${encodeURIComponent(id)}/price`, pricingData).then(responseData);
+
+export const updateAdminProductStock = (id, stock) =>
+  api.patch(`/products/${encodeURIComponent(id)}/stock`, { stock }).then(responseData);
+
+export const updateAdminProductDescription = (id, descriptionData) =>
+  api.patch(`/products/${encodeURIComponent(id)}/description`, descriptionData).then(responseData);
+
 export const deleteAdminProduct = id =>
   api.delete(`/products/${encodeURIComponent(id)}`).then(responseData);
+
+export const fetchAdminOrders = (params = {}) =>
+  api.get('/orders', { params }).then(responseData);
+
+export const fetchAdminOrderById = id =>
+  api.get(`/orders/${encodeURIComponent(id)}`).then(responseData);
+
+export const updateAdminOrderStatus = (id, data) =>
+  api.put(`/orders/${encodeURIComponent(id)}/status`, data).then(responseData);
 
 export const previewCatalogImportApi = (payload = {}) =>
   api.post('/catalog/preview', payload).then(responseData);

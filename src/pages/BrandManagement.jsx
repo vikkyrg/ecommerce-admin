@@ -162,12 +162,12 @@ export default function BrandManagement() {
         onMenuClick={toggleMobileMenu}
       />
 
-      <main className="p-4 sm:p-6 lg:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
+      <main className="min-w-0 p-3.5 sm:p-6 lg:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
         {/* Search & Actions Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-lg border border-[#E2E8F0]">
           <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {/* Search Input */}
-            <div className="relative flex-1 max-w-md">
+            <div className="relative w-full min-w-0 flex-1 sm:max-w-md">
               <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -179,7 +179,7 @@ export default function BrandManagement() {
             </div>
 
             {/* Category Dropdown */}
-            <div className="relative min-w-[200px]">
+            <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[200px]">
               <select
                 value={selectedCategory}
                 onChange={e => setSelectedCategory(e.target.value)}
@@ -290,14 +290,14 @@ export default function BrandManagement() {
                 <div className="flex items-center justify-end gap-2 pt-3 mt-4 border-t border-[#E2E8F0]">
                   <button
                     onClick={() => openEditModal(b)}
-                    className="p-1.5 rounded text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] transition-colors"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded text-[#64748B] transition-colors hover:bg-[#F8FAFC] hover:text-[#1E293B]"
                     title="Edit Brand"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setDeleteId(b._id || b.slug)}
-                    className="p-1.5 rounded text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
                     title="Delete Brand"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -311,21 +311,22 @@ export default function BrandManagement() {
 
       {/* Brand Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
-          <div className="relative w-full max-w-lg bg-white border border-[#E2E8F0] rounded-lg shadow-lg overflow-hidden my-auto">
-            <div className="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-slate-900/40 p-2 sm:items-center sm:p-4">
+          <div className="relative my-auto flex max-h-[calc(100dvh-1rem)] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-[#E2E8F0] bg-white shadow-lg sm:max-h-[90vh]">
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-[#E2E8F0] px-4 py-4 sm:px-5">
               <h3 className="text-[16px] font-semibold text-[#1E293B]">
                 {editingBrand ? 'Edit Brand' : 'Add Brand'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-[#64748B] hover:text-[#1E293B] p-1"
+                className="inline-flex h-10 w-10 items-center justify-center rounded text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#1E293B]"
+                aria-label="Close brand form"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-5 space-y-4">
+            <form onSubmit={handleSubmit} className="min-h-0 space-y-4 overflow-y-auto p-4 sm:p-5">
               <div>
                 <label className="block text-[13px] font-medium text-[#1E293B] mb-1.5">
                   Brand Name *
@@ -393,18 +394,18 @@ export default function BrandManagement() {
                 <span className="text-[13px] text-[#1E293B]">Brand is Active &amp; Published</span>
               </label>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
+              <div className="flex flex-col-reverse gap-2 border-t border-[#E2E8F0] pt-4 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="h-[38px] px-4 rounded-md border border-[#E2E8F0] text-[13px] font-semibold text-[#1E293B] hover:bg-[#F8FAFC] transition-colors"
+                  className="h-11 w-full rounded-md border border-[#E2E8F0] px-4 text-[13px] font-semibold text-[#1E293B] transition-colors hover:bg-[#F8FAFC] sm:h-[38px] sm:w-auto"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="h-[38px] px-4 rounded-md bg-[#B8862D] hover:bg-[#9c7126] text-white font-semibold text-[13px] transition-colors disabled:opacity-50"
+                  className="h-11 w-full rounded-md bg-[#B8862D] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#9c7126] disabled:opacity-50 sm:h-[38px] sm:w-auto"
                 >
                   {submitting ? 'Saving...' : editingBrand ? 'Update Brand' : 'Create Brand'}
                 </button>
@@ -416,8 +417,8 @@ export default function BrandManagement() {
 
       {/* Delete Confirmation Modal */}
       {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
-          <div className="bg-white border border-[#E2E8F0] rounded-lg p-6 max-w-sm w-full space-y-4 shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-3 sm:items-center sm:p-4">
+          <div className="my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-sm space-y-4 overflow-y-auto rounded-lg border border-[#E2E8F0] bg-white p-4 shadow-lg sm:p-6">
             <div className="flex items-center gap-2.5 text-red-600">
               <AlertCircle className="w-5 h-5" />
               <h3 className="font-semibold text-[16px] text-[#1E293B]">Delete Brand</h3>
@@ -425,16 +426,16 @@ export default function BrandManagement() {
             <p className="text-[13px] text-[#64748B] leading-relaxed">
               Are you sure you want to delete this brand? Products linked to this brand will remain in your catalog.
             </p>
-            <div className="flex items-center justify-end gap-2.5 pt-2">
+            <div className="flex flex-wrap items-center justify-end gap-2.5 pt-2">
               <button
                 onClick={() => setDeleteId(null)}
-                className="h-[36px] px-3.5 rounded-md border border-[#E2E8F0] text-[13px] text-[#1E293B] font-medium hover:bg-[#F8FAFC]"
+                className="h-10 px-3.5 rounded-md border border-[#E2E8F0] text-[13px] text-[#1E293B] font-medium hover:bg-[#F8FAFC]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className="h-[36px] px-3.5 rounded-md bg-red-600 hover:bg-red-700 text-[13px] text-white font-semibold"
+                className="h-10 px-3.5 rounded-md bg-red-600 hover:bg-red-700 text-[13px] text-white font-semibold"
               >
                 Delete Brand
               </button>

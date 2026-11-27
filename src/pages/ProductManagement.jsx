@@ -19,8 +19,32 @@ import {
   fetchAdminBrands,
   createAdminProduct,
   updateAdminProduct,
+  updateAdminProductStock,
   deleteAdminProduct
 } from '../services/adminApi';
+import { getProductStockStatus, getStockStatusClass } from '../utils/productStock';
+
+const verifyPersistedProduct = (product, expected) => {
+  const savedDiscountPrice = product.discountPrice == null || Number(product.discountPrice) <= 0
+    ? null
+    : Number(product.discountPrice);
+  const savedDiscountPercentage = product.discountPercentage == null
+    ? null
+    : Number(product.discountPercentage);
+  const savedStock = product.stock == null ? null : Number(product.stock);
+
+  if (
+    Number(product.originalPrice ?? product.price) !== Number(expected.originalPrice) ||
+    Number(product.price) !== Number(expected.price) ||
+    savedDiscountPrice !== expected.discountPrice ||
+    savedDiscountPercentage !== expected.discountPercentage ||
+    (expected.stock !== undefined && savedStock !== expected.stock) ||
+    product.shortDescription !== expected.shortDescription ||
+    product.description !== expected.description
+  ) {
+    throw new Error('The server did not return the saved product price, stock and descriptions. Verify the product API response before proceeding.');
+  }
+};
 
 export default function ProductManagement() {
   const { toggleMobileMenu } = useOutletContext() || {};
@@ -31,6 +55,7 @@ export default function ProductManagement() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedBrand, setSelectedBrand] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
+  const [selectedStockStatus, setSelectedStockStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const [loading, setLoading] = useState(true);
@@ -40,13 +65,18 @@ export default function ProductManagement() {
   // Product Form Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     name: '',
     category: '',
     brand: '',
     sku: '',
+    shortDescription: '',
     description: '',
+    applications: '',
+    features: '',
     price: '',
+    discountPrice: '',
+    discountPercentage: '',
     mrp: '',
     stock: '',
     size: '',
@@ -57,10 +87,15 @@ export default function ProductManagement() {
     isFeatured: false,
     isBestSeller: false,
     isActive: true
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
   const [imagePreview, setImagePreview] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [editingStockId, setEditingStockId] = useState('');
+  const [stockDraft, setStockDraft] = useState('');
+  const [savingStockId, setSavingStockId] = useState('');
 
   const [searchParams] = useSearchParams();
 
@@ -102,22 +137,8 @@ export default function ProductManagement() {
   const openAddModal = () => {
     setEditingProduct(null);
     setFormData({
-      name: '',
-      category: categories[0]?.slug || categories[0]?.name || '',
-      brand: '',
-      sku: '',
-      description: '',
-      price: '',
-      mrp: '',
-      stock: '',
-      size: '',
-      weight: '',
-      unit: '',
-      image: '',
-      variants: [],
-      isFeatured: false,
-      isBestSeller: false,
-      isActive: true
+      ...initialFormState,
+      category: categories[0]?.slug || categories[0]?.name || ''
     });
     setImagePreview('');
     setShowModal(true);
@@ -125,13 +146,42 @@ export default function ProductManagement() {
 
   const openEditModal = prod => {
     setEditingProduct(prod);
+    const regularPrice = prod.originalPrice ?? (prod.price != null && prod.price !== '' ? prod.price : '');
+    const savedDiscountPrice = prod.discountPrice ?? prod.offerPrice;
+    const hasDiscount = regularPrice !== '' &&
+      Number.isFinite(Number(regularPrice)) &&
+      Number(regularPrice) > 0 &&
+      savedDiscountPrice != null &&
+      savedDiscountPrice !== '' &&
+      Number.isFinite(Number(savedDiscountPrice)) &&
+      Number(savedDiscountPrice) > 0 &&
+      Number(savedDiscountPrice) < Number(regularPrice);
+    const discountPrice = hasDiscount ? savedDiscountPrice : '';
+    const storedDiscountPercentage = Number(prod.discountPercentage);
+    const discountPct = hasDiscount
+      ? Number.isFinite(storedDiscountPercentage) && storedDiscountPercentage > 0 && storedDiscountPercentage <= 100
+        ? storedDiscountPercentage
+        : Math.round(((Number(regularPrice) - Number(discountPrice)) / Number(regularPrice)) * 100)
+      : '';
+
+    const featuresStr = Array.isArray(prod.features)
+      ? prod.features.join('\n')
+      : typeof prod.features === 'string'
+        ? prod.features
+        : '';
+
     setFormData({
       name: prod.name || '',
       category: prod.category || categories[0]?.slug || '',
       brand: prod.brand || '',
       sku: prod.sku || '',
+      shortDescription: prod.shortDescription || '',
       description: prod.description || '',
-      price: prod.price ?? '',
+      applications: prod.applications || '',
+      features: featuresStr,
+      price: regularPrice,
+      discountPrice: discountPrice,
+      discountPercentage: discountPct,
       mrp: prod.mrp ?? '',
       stock: prod.stock ?? '',
       size: prod.size || '',
@@ -201,24 +251,105 @@ export default function ProductManagement() {
     setError('');
 
     try {
+      if (formData.price === '' || formData.price === null || formData.price === undefined) {
+        setError('Product Price is required.');
+        setSubmitting(false);
+        return;
+      }
+      if (!Number.isFinite(Number(formData.price)) || Number(formData.price) <= 0) {
+        setError('Product Price must be a positive number.');
+        setSubmitting(false);
+        return;
+      }
+      if (formData.discountPrice !== '' && formData.discountPrice !== null && formData.discountPrice !== undefined) {
+        if (!Number.isFinite(Number(formData.discountPrice)) || Number(formData.discountPrice) < 0) {
+          setError('Discount Price must be a valid non-negative number.');
+          setSubmitting(false);
+          return;
+        }
+        if (Number(formData.discountPrice) > Number(formData.price)) {
+          setError('Discount Price cannot be greater than Product Price.');
+          setSubmitting(false);
+          return;
+        }
+      }
+      const enteredStock = formData.stock === '' ? undefined : Number(formData.stock);
+      if (enteredStock !== undefined && (!Number.isSafeInteger(enteredStock) || enteredStock < 0)) {
+        setError('Stock must be a non-negative whole number.');
+        setSubmitting(false);
+        return;
+      }
+
+      const calculatedDiscount = (formData.price && Number(formData.discountPrice) > 0 && Number(formData.price) > 0 && Number(formData.discountPrice) < Number(formData.price))
+        ? Math.round(((Number(formData.price) - Number(formData.discountPrice)) / Number(formData.price)) * 100)
+        : null;
+      const savedOriginalPrice = Number(editingProduct?.originalPrice ?? editingProduct?.price);
+      const savedDiscountPrice = editingProduct?.discountPrice == null || editingProduct.discountPrice === ''
+        ? null
+        : Number(editingProduct.discountPrice);
+      const enteredDiscountPrice = formData.discountPrice === '' || formData.discountPrice == null
+        ? null
+        : Number(formData.discountPrice);
+      const savedDiscountPercentage = Number(editingProduct?.discountPercentage);
+      const unchangedSavedPricing = Boolean(editingProduct) &&
+        savedOriginalPrice === Number(formData.price) &&
+        savedDiscountPrice === enteredDiscountPrice;
+      const discountPercentage = unchangedSavedPricing &&
+        Number(formData.discountPercentage) === savedDiscountPercentage &&
+        Number.isFinite(savedDiscountPercentage) &&
+        savedDiscountPercentage > 0 &&
+        savedDiscountPercentage <= 100
+        ? savedDiscountPercentage
+        : calculatedDiscount;
+
       const payload = {
         ...formData,
-        price: formData.price === '' ? null : Number(formData.price),
-        mrp: formData.mrp === '' ? null : Number(formData.mrp),
-        stock: formData.stock === '' ? null : Number(formData.stock),
+        originalPrice: Number(formData.price),
+        price: Number(formData.price),
+        discountPrice: formData.discountPrice === '' ||
+          formData.discountPrice === null ||
+          formData.discountPrice === undefined ||
+          !Number.isFinite(Number(formData.discountPrice)) ||
+          Number(formData.discountPrice) <= 0 ||
+          Number(formData.discountPrice) === Number(formData.price)
+          ? null
+          : Number(formData.discountPrice),
+        discountPercentage,
+        shortDescription: formData.shortDescription?.trim() || '',
+        description: formData.description?.trim() || '',
+        applications: formData.applications?.trim() || '',
+        features: (formData.features || '').split(/\r?\n/).map(f => f.trim()).filter(Boolean),
+        mrp: formData.mrp === '' ? (formData.discountPrice ? Number(formData.price) : null) : Number(formData.mrp),
+        stock: enteredStock,
         variants: formData.variants.filter(variant => variant.name?.trim())
       };
 
       if (editingProduct) {
         const id = editingProduct._id || editingProduct.id || editingProduct.sku;
-        const updated = await updateAdminProduct(id, payload);
-        setProducts(prev =>
-          prev.map(p => ((p._id || p.id || p.sku) === id ? { ...p, ...updated } : p))
+        await updateAdminProduct(id, payload);
+        const productsData = await fetchAdminProducts();
+        const persistedProducts = Array.isArray(productsData?.products) ? productsData.products : [];
+        const persistedProduct = persistedProducts.find(product =>
+          String(product._id || product.id || product.sku) === String(id)
         );
+        if (!persistedProduct) {
+          throw new Error('The updated product was not returned by the product API. Refresh and check the product before proceeding.');
+        }
+        verifyPersistedProduct(persistedProduct, payload);
+        setProducts(persistedProducts);
         setSuccess(`Product '${formData.name}' updated.`);
       } else {
         const created = await createAdminProduct(payload);
-        setProducts(prev => [created, ...prev]);
+        const productsData = await fetchAdminProducts();
+        const persistedProducts = Array.isArray(productsData?.products) ? productsData.products : [];
+        const persistedProduct = persistedProducts.find(product =>
+          String(product._id || product.id || product.sku) === String(created._id || created.id || created.sku)
+        );
+        if (!persistedProduct) {
+          throw new Error('The created product was not returned by the product API. Refresh and check the product before proceeding.');
+        }
+        verifyPersistedProduct(persistedProduct, payload);
+        setProducts(persistedProducts);
         setSuccess(`Product '${formData.name}' created.`);
       }
       setShowModal(false);
@@ -227,6 +358,41 @@ export default function ProductManagement() {
       setError(err.message || 'Operation failed');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const startStockEdit = product => {
+    const id = String(product._id || product.id || product.sku);
+    setEditingStockId(id);
+    setStockDraft(String(product.stock ?? ''));
+    setError('');
+    setSuccess('');
+  };
+
+  const saveStock = async id => {
+    const stock = Number(stockDraft);
+    if (!Number.isSafeInteger(stock) || stock < 0 || stockDraft.trim() === '') {
+      setError('Stock must be a non-negative whole number.');
+      return;
+    }
+
+    setSavingStockId(id);
+    setError('');
+    setSuccess('');
+    try {
+      const updated = await updateAdminProductStock(id, stock);
+      setProducts(current => current.map(product =>
+        String(product._id || product.id || product.sku) === id
+          ? { ...product, ...updated }
+          : product
+      ));
+      setEditingStockId('');
+      setStockDraft('');
+      setSuccess(`Stock updated to ${updated.stock} units.`);
+    } catch (err) {
+      setError(err.message || 'Failed to update stock.');
+    } finally {
+      setSavingStockId('');
     }
   };
 
@@ -262,7 +428,10 @@ export default function ProductManagement() {
       (selectedStatus === 'Active' && p.isActive !== false) ||
       (selectedStatus === 'Draft' && p.isActive === false);
 
-    return matchSearch && matchCategory && matchBrand && matchStatus;
+    const matchStockStatus = selectedStockStatus === 'All' ||
+      getProductStockStatus(p.stock) === selectedStockStatus;
+
+    return matchSearch && matchCategory && matchBrand && matchStatus && matchStockStatus;
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
@@ -286,12 +455,12 @@ export default function ProductManagement() {
         onMenuClick={toggleMobileMenu}
       />
 
-      <main className="p-5 sm:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
+      <main className="min-w-0 p-3.5 sm:p-6 lg:p-8 space-y-6 flex-1 max-w-7xl w-full mx-auto">
         {/* Search & Multi-Filter Bar */}
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-lg border border-[#E2E8F0]">
           <div className="flex-1 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
             {/* Search Input */}
-            <div className="relative flex-1 min-w-[220px]">
+            <div className="relative w-full min-w-0 flex-1 sm:w-auto sm:min-w-[220px]">
               <Search className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -303,7 +472,7 @@ export default function ProductManagement() {
             </div>
 
             {/* Category Dropdown */}
-            <div className="relative min-w-[170px]">
+            <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[170px]">
               <select
                 value={selectedCategory}
                 onChange={e => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
@@ -320,7 +489,7 @@ export default function ProductManagement() {
             </div>
 
             {/* Brand Dropdown */}
-            <div className="relative min-w-[150px]">
+            <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[150px]">
               <select
                 value={selectedBrand}
                 onChange={e => { setSelectedBrand(e.target.value); setCurrentPage(1); }}
@@ -337,7 +506,7 @@ export default function ProductManagement() {
             </div>
 
             {/* Status Dropdown */}
-            <div className="relative min-w-[130px]">
+            <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[130px]">
               <select
                 value={selectedStatus}
                 onChange={e => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
@@ -346,6 +515,21 @@ export default function ProductManagement() {
                 <option value="All">All Statuses</option>
                 <option value="Active">Active</option>
                 <option value="Draft">Inactive</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-[#64748B] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
+            <div className="relative w-full min-w-0 sm:w-auto sm:min-w-[150px]">
+              <select
+                value={selectedStockStatus}
+                onChange={e => { setSelectedStockStatus(e.target.value); setCurrentPage(1); }}
+                className="w-full h-[42px] pl-3.5 pr-8 bg-white text-[#1E293B] text-[14px] border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#B8862D] focus:ring-1 focus:ring-[#B8862D] appearance-none cursor-pointer"
+              >
+                <option value="All">All Stock Levels</option>
+                <option value="In Stock">In Stock</option>
+                <option value="Low Stock">Low Stock</option>
+                <option value="Critical Stock">Critical Stock</option>
+                <option value="Out of Stock">Out of Stock</option>
               </select>
               <ChevronDown className="w-4 h-4 text-[#64748B] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
@@ -399,15 +583,16 @@ export default function ProductManagement() {
           </div>
         ) : (
           <div className="bg-white border border-[#E2E8F0] rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto overscroll-x-contain">
+              <table className="w-full min-w-[1060px] text-left">
                 <thead className="bg-[#F8FAFC] text-[#64748B] border-b border-[#E2E8F0]">
                   <tr>
                     <th className="px-5 py-3.5 text-[12.5px] font-semibold">Product Title</th>
                     <th className="px-5 py-3.5 text-[12.5px] font-semibold">Brand</th>
                     <th className="px-5 py-3.5 text-[12.5px] font-semibold">Category</th>
-                    <th className="px-5 py-3.5 text-[12.5px] font-semibold">Price / Variants</th>
+                    <th className="px-5 py-3.5 text-[12.5px] font-semibold">Regular / Discount Price</th>
                     <th className="px-5 py-3.5 text-[12.5px] font-semibold">Stock Balance</th>
+                    <th className="px-5 py-3.5 text-[12.5px] font-semibold">Stock Status</th>
                     <th className="px-5 py-3.5 text-[12.5px] font-semibold">Status</th>
                     <th className="px-5 py-3.5 text-[12.5px] font-semibold text-right">Actions</th>
                   </tr>
@@ -454,24 +639,84 @@ export default function ProductManagement() {
                       </td>
 
                       <td className="px-5 py-3.5">
-                        <div className="text-[14px] font-semibold text-[#1E293B]">
-                          {p.price != null ? `₹${Number(p.price).toLocaleString('en-IN')}` : <span className="text-[#94A3B8] font-normal">Not set</span>}
-                        </div>
+                        <div className="space-y-0.5">
+                          <div className="text-[13px] font-semibold text-[#1E293B]">
+                            Regular: {(p.originalPrice ?? p.price) != null
+                              ? `₹${Number(p.originalPrice ?? p.price).toLocaleString('en-IN')}`
+                              : 'Not set'}
+                          </div>
+                          <div className="text-[12px] text-[#64748B]">
+                            Discount: {p.discountPrice != null &&
+                              Number(p.discountPrice) < Number(p.originalPrice ?? p.price)
+                              ? `₹${Number(p.discountPrice).toLocaleString('en-IN')}`
+                              : '—'}
+                          </div>
                         {p.variants?.length > 1 && (
                           <span className="text-[12px] text-[#64748B] block mt-0.5">{p.variants.length} options</span>
+                        )}
+                        </div>
+                      </td>
+
+                      <td className="px-5 py-3.5">
+                        {editingStockId === String(p._id || p.id || p.sku) ? (
+                          <div className="flex flex-col items-start gap-1.5">
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={stockDraft}
+                              onChange={event => setStockDraft(event.target.value)}
+                              aria-label={`Stock quantity for ${p.name}`}
+                              className="h-10 w-24 rounded border border-[#CBD5E1] px-2 text-[13px]"
+                            />
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={savingStockId === String(p._id || p.id || p.sku)}
+                                onClick={() => saveStock(String(p._id || p.id || p.sku))}
+                                className="min-h-9 px-1 text-left text-[12px] font-semibold text-emerald-700 hover:underline disabled:opacity-50"
+                              >
+                                {savingStockId === String(p._id || p.id || p.sku) ? 'Saving…' : 'Save Changes'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setEditingStockId(''); setStockDraft(''); }}
+                                className="min-h-9 px-1 text-[12px] font-semibold text-[#64748B] hover:underline"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            <span className="text-[14px] font-medium text-[#1E293B]">
+                              {Number.isSafeInteger(p.stock) ? `${p.stock} units` : 'Not set'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => startStockEdit(p)}
+                              className="inline-flex min-h-9 items-center text-[12px] font-semibold text-[#B8862D] hover:underline"
+                            >
+                              Edit Stock
+                            </button>
+                          </div>
                         )}
                       </td>
 
                       <td className="px-5 py-3.5">
-                        <span className={`text-[14px] font-medium ${p.stock == null ? 'text-[#94A3B8]' : p.stock > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                          {p.stock == null ? 'Not set' : `${p.stock} units`}
-                        </span>
+                        {(() => {
+                          const stockStatus = getProductStockStatus(p.stock);
+                          return (
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded border text-[12px] font-medium ${getStockStatusClass(stockStatus)}`}>
+                              {stockStatus}
+                            </span>
+                          );
+                        })()}
                       </td>
 
                       <td className="px-5 py-3.5">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-[12px] font-medium ${
-                          p.isActive !== false ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
-                        }`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-[12px] font-medium ${p.isActive !== false ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                          }`}>
                           {p.isActive !== false ? 'Active' : 'Inactive'}
                         </span>
                       </td>
@@ -480,15 +725,17 @@ export default function ProductManagement() {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => openEditModal(p)}
-                            className="p-1.5 text-[#64748B] hover:text-[#1E293B] hover:bg-[#F8FAFC] rounded transition-colors"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded text-[#64748B] transition-colors hover:bg-[#F8FAFC] hover:text-[#1E293B]"
                             title="Edit Product"
+                            aria-label={`Edit ${p.name}`}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setDeleteId(p._id || p.sku)}
-                            className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
                             title="Delete Product"
+                            aria-label={`Delete ${p.name}`}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -510,7 +757,7 @@ export default function ProductManagement() {
                   type="button"
                   onClick={() => setCurrentPage(Math.max(1, activePage - 1))}
                   disabled={activePage === 1}
-                  className="h-[34px] px-3.5 border border-[#E2E8F0] rounded text-[#1E293B] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[13px]"
+                  className="h-10 px-3.5 border border-[#E2E8F0] rounded text-[#1E293B] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[13px]"
                 >
                   Previous
                 </button>
@@ -519,7 +766,7 @@ export default function ProductManagement() {
                   type="button"
                   onClick={() => setCurrentPage(Math.min(totalPages, activePage + 1))}
                   disabled={activePage >= totalPages}
-                  className="h-[34px] px-3.5 border border-[#E2E8F0] rounded text-[#1E293B] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[13px]"
+                  className="h-10 px-3.5 border border-[#E2E8F0] rounded text-[#1E293B] hover:bg-[#F8FAFC] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-[13px]"
                 >
                   Next
                 </button>
@@ -530,21 +777,22 @@ export default function ProductManagement() {
 
         {/* Dynamic Add / Edit Product Modal */}
         {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 overflow-y-auto">
-            <div className="relative w-full max-w-2xl bg-white border border-[#E2E8F0] rounded-lg shadow-lg overflow-hidden my-auto max-h-[90vh] flex flex-col">
-              <div className="px-6 py-4.5 border-b border-[#E2E8F0] flex items-center justify-between">
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-slate-900/40 p-2 sm:items-center sm:p-4">
+          <div className="relative my-auto flex max-h-[calc(100dvh-1rem)] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-[#E2E8F0] bg-white shadow-lg sm:max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-4 sm:px-6">
                 <h3 className="text-[18px] font-[650] text-[#1E293B] tracking-tight">
                   {editingProduct ? 'Edit Product' : 'Add Product'}
                 </h3>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="text-[#64748B] hover:text-[#1E293B] p-1"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#1E293B]"
+                  aria-label="Close product form"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4">
+              <form onSubmit={handleSubmit} className="min-h-0 space-y-4 overflow-y-auto p-4 sm:p-6">
                 <div>
                   <label className="block text-[13.5px] font-semibold text-[#1E293B] mb-1.5">
                     Product Title *
@@ -558,7 +806,7 @@ export default function ProductManagement() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {/* Category */}
                   <div>
                     <label className="block text-[13.5px] font-semibold text-[#1E293B] mb-1.5">
@@ -623,35 +871,73 @@ export default function ProductManagement() {
                     />
                   </div>
 
-                  {/* Selling Price */}
+                  {/* Pricing Section: Product Price (₹) & Discount Price (₹) */}
                   <div>
                     <label className="block text-[13.5px] font-semibold text-[#1E293B] mb-1.5">
-                      Selling Price (₹)
+                      Regular Price (₹) *
                     </label>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
+                      required
                       value={formData.price}
-                      onChange={e => setFormData({ ...formData, price: e.target.value })}
-                      placeholder="1250"
+                      onChange={e => {
+                        const val = e.target.value;
+                        const disc = formData.discountPrice;
+                        let pct = '';
+                        if (val && disc && Number(val) > 0 && Number(disc) < Number(val)) {
+                          pct = Math.round(((Number(val) - Number(disc)) / Number(val)) * 100);
+                        }
+                        setFormData({
+                          ...formData,
+                          price: val,
+                          discountPercentage: pct
+                        });
+                      }}
+                      placeholder="2500"
                       className="w-full h-[42px] px-3.5 bg-white text-[#1E293B] text-[14px] placeholder-[#94A3B8] border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#B8862D] focus:ring-1 focus:ring-[#B8862D]"
                     />
                   </div>
 
-                  {/* MRP */}
                   <div>
                     <label className="block text-[13.5px] font-semibold text-[#1E293B] mb-1.5">
-                      MRP (₹)
+                      Discount Price (₹)
                     </label>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
-                      value={formData.mrp}
-                      onChange={e => setFormData({ ...formData, mrp: e.target.value })}
-                      placeholder="1500"
+                      value={formData.discountPrice}
+                      onChange={e => {
+                        const val = e.target.value;
+                        const regPrice = formData.price;
+                        let pct = '';
+                        if (regPrice && val && Number(regPrice) > 0 && Number(val) < Number(regPrice)) {
+                          pct = Math.round(((Number(regPrice) - Number(val)) / Number(regPrice)) * 100);
+                        }
+                        setFormData({
+                          ...formData,
+                          discountPrice: val,
+                          discountPercentage: pct
+                        });
+                      }}
+                      placeholder="2000"
                       className="w-full h-[42px] px-3.5 bg-white text-[#1E293B] text-[14px] placeholder-[#94A3B8] border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#B8862D] focus:ring-1 focus:ring-[#B8862D]"
+                    />
+                  </div>
+
+                  {/* Discount Percentage (Auto-calculated, read-only) */}
+                  <div>
+                    <label className="block text-[13.5px] font-semibold text-[#1E293B] mb-1.5">
+                      Discount Percentage (%)
+                    </label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={formData.discountPercentage ? `${formData.discountPercentage}%` : ''}
+                      placeholder="Auto-calculated (e.g. 20%)"
+                      className="w-full h-[42px] px-3.5 bg-slate-50 text-[#64748B] text-[14px] placeholder-[#94A3B8] border border-[#E2E8F0] rounded-md cursor-not-allowed select-none"
                     />
                   </div>
 
@@ -666,21 +952,64 @@ export default function ProductManagement() {
                       step="1"
                       value={formData.stock}
                       onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                      placeholder="50"
+                      placeholder="Catalog default"
                       className="w-full h-[42px] px-3.5 bg-white text-[#1E293B] text-[14px] placeholder-[#94A3B8] border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#B8862D] focus:ring-1 focus:ring-[#B8862D]"
                     />
                   </div>
                 </div>
 
-                {/* Description */}
+                {/* Short Description */}
                 <div>
                   <label className="block text-[13.5px] font-semibold text-[#1E293B] mb-1.5">
-                    Description & Applications
+                    Short Description (Brief summary for product card &amp; highlights)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.shortDescription}
+                    onChange={e => setFormData({ ...formData, shortDescription: e.target.value })}
+                    placeholder="e.g. High-performance polymer-modified tile adhesive"
+                    className="w-full h-[42px] px-3.5 bg-white text-[#1E293B] text-[14px] placeholder-[#94A3B8] border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#B8862D] focus:ring-1 focus:ring-[#B8862D]"
+                  />
+                </div>
+
+                {/* Full Product Description */}
+                <div>
+                  <label className="block text-[13.5px] font-semibold text-[#1E293B] mb-1.5">
+                    Full Product Description
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formData.description}
+                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Detailed information about the product, formulation, and characteristics..."
+                    className="w-full p-3 bg-white text-[#1E293B] text-[14px] placeholder-[#94A3B8] border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#B8862D] focus:ring-1 focus:ring-[#B8862D]"
+                  />
+                </div>
+
+                {/* Applications / Uses */}
+                <div>
+                  <label className="block text-[13.5px] font-semibold text-[#1E293B] mb-1.5">
+                    Applications / Uses
                   </label>
                   <textarea
                     rows={3}
-                    value={formData.description}
-                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                    value={formData.applications}
+                    onChange={e => setFormData({ ...formData, applications: e.target.value })}
+                    placeholder="Where and how this product can be applied (e.g. Interior floors & walls, ceramic tiles, vitrified tiles)..."
+                    className="w-full p-3 bg-white text-[#1E293B] text-[14px] placeholder-[#94A3B8] border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#B8862D] focus:ring-1 focus:ring-[#B8862D]"
+                  />
+                </div>
+
+                {/* Product Features */}
+                <div>
+                  <label className="block text-[13.5px] font-semibold text-[#1E293B] mb-1.5">
+                    Product Features (One per line)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={formData.features}
+                    onChange={e => setFormData({ ...formData, features: e.target.value })}
+                    placeholder="Ready to use, just add water&#10;Excellent bonding strength&#10;No shrinkage or cracking"
                     className="w-full p-3 bg-white text-[#1E293B] text-[14px] placeholder-[#94A3B8] border border-[#E2E8F0] rounded-md focus:outline-none focus:border-[#B8862D] focus:ring-1 focus:ring-[#B8862D]"
                   />
                 </div>
@@ -712,12 +1041,13 @@ export default function ProductManagement() {
                         placeholder="Size / Weight"
                         value={v.size || v.weight || ''}
                         onChange={e => updateVariantRow(i, 'size', e.target.value)}
-                        className="w-32 h-[36px] bg-white text-[13px] text-[#1E293B] px-3 rounded border border-[#E2E8F0] focus:outline-none focus:border-[#B8862D]"
+                        className="h-[36px] w-full rounded border border-[#E2E8F0] bg-white px-3 text-[13px] text-[#1E293B] focus:outline-none focus:border-[#B8862D] sm:w-32"
                       />
                       <button
                         type="button"
                         onClick={() => removeVariantRow(i)}
-                        className="p-1.5 text-red-600 hover:text-red-700"
+                        className="inline-flex h-10 w-10 items-center justify-center text-red-600 hover:text-red-700"
+                        aria-label={`Remove variant ${i + 1}`}
                         title="Remove Variant"
                       >
                         <X className="w-4 h-4" />
@@ -747,7 +1077,8 @@ export default function ProductManagement() {
                             setImagePreview('');
                             setFormData(prev => ({ ...prev, image: '' }));
                           }}
-                          className="absolute top-1 right-1 bg-slate-900 text-white rounded-full p-0.5"
+                          className="absolute right-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-white"
+                          aria-label="Remove image"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -789,18 +1120,18 @@ export default function ProductManagement() {
                   </label>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E2E8F0]">
+                <div className="flex flex-col-reverse gap-2 border-t border-[#E2E8F0] pt-4 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="h-[40px] px-4 rounded-md border border-[#E2E8F0] text-[13.5px] font-semibold text-[#1E293B] hover:bg-[#F8FAFC]"
+                    className="h-11 w-full rounded-md border border-[#E2E8F0] px-4 text-[13.5px] font-semibold text-[#1E293B] hover:bg-[#F8FAFC] sm:h-[40px] sm:w-auto"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="h-[40px] px-4 rounded-md bg-[#B8862D] hover:bg-[#9c7126] text-white font-semibold text-[13.5px] transition-colors disabled:opacity-50"
+                    className="h-11 w-full rounded-md bg-[#B8862D] px-4 text-[13.5px] font-semibold text-white transition-colors hover:bg-[#9c7126] disabled:opacity-50 sm:h-[40px] sm:w-auto"
                   >
                     {submitting ? 'Saving...' : editingProduct ? 'Update Product' : 'Create Product'}
                   </button>
@@ -812,8 +1143,8 @@ export default function ProductManagement() {
 
         {/* Delete Confirmation Modal */}
         {deleteId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40">
-            <div className="bg-white border border-[#E2E8F0] rounded-lg p-6 max-w-sm w-full space-y-4 shadow-lg">
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-3 sm:items-center sm:p-4">
+            <div className="my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-sm space-y-4 overflow-y-auto rounded-lg border border-[#E2E8F0] bg-white p-4 shadow-lg sm:p-6">
               <div className="flex items-center gap-2.5 text-red-600">
                 <AlertCircle className="w-5 h-5" />
                 <h3 className="font-semibold text-[17px] text-[#1E293B]">Delete Product</h3>
@@ -821,16 +1152,16 @@ export default function ProductManagement() {
               <p className="text-[13.5px] text-[#64748B] leading-relaxed">
                 Are you sure you want to delete this product? It will be removed from both the inventory dashboard and customer store.
               </p>
-              <div className="flex items-center justify-end gap-2.5 pt-2">
+              <div className="flex flex-wrap items-center justify-end gap-2.5 pt-2">
                 <button
                   onClick={() => setDeleteId(null)}
-                  className="h-[36px] px-3.5 rounded-md border border-[#E2E8F0] text-[13px] text-[#1E293B] font-medium hover:bg-[#F8FAFC]"
+                  className="h-10 px-3.5 rounded-md border border-[#E2E8F0] text-[13px] text-[#1E293B] font-medium hover:bg-[#F8FAFC]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="h-[36px] px-3.5 rounded-md bg-red-600 hover:bg-red-700 text-[13px] text-white font-semibold"
+                  className="h-10 px-3.5 rounded-md bg-red-600 hover:bg-red-700 text-[13px] text-white font-semibold"
                 >
                   Delete Product
                 </button>

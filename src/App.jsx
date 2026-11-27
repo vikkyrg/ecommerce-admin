@@ -10,6 +10,7 @@ import ProductManagement from './pages/ProductManagement';
 import ExcelImport from './pages/ExcelImport';
 import CustomersManagement from './pages/CustomersManagement';
 import EnquiriesManagement from './pages/EnquiriesManagement';
+import OrderManagement from './pages/OrderManagement';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAdminAuth();
@@ -43,6 +44,7 @@ export default function App() {
           >
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/orders" element={<OrderManagement />} />
             <Route path="/categories" element={<CategoryManagement />} />
             <Route path="/brands" element={<BrandManagement />} />
             <Route path="/products" element={<ProductManagement />} />
